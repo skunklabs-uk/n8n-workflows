@@ -111,6 +111,16 @@ Non fermarsi per passaggi già approvati, errori locali correggibili, verifiche 
 - Ogni testo rivolto a persone deve passare una revisione tecnica e `humanize-writing` quando disponibile, nel rispetto delle regole linguistiche del repository.
 - Il template Agent OS è uno scheletro, non una fonte autorevole: non copiarlo né introdurre percorsi, documenti o regole senza un requisito concreto.
 
+## Closeout terminale RFC-0001
+
+Prima del merge terminale, del commit o push che conclude la missione oppure della chiusura dell'issue, completare il closeout previsto da RFC-0001.
+
+Verificare tutte le fonti autorevoli e i documenti `Active` interessati. Aggiornare quelli che mantengono la stessa funzione; archiviare nella stessa modifica quelli conclusi, superati, sostituiti, obsoleti o non più operativi. Prima dell'archiviazione trasferire fatti, decisioni, limiti, requisiti e obblighi di verifica ancora durevoli nella fonte corrente; rimuovere poi il documento da puntatori, indici, tracker, code di lavoro, sezioni sullo stato corrente e istruzioni operative.
+
+I commenti GitHub forniscono tracciabilità, ma non sostituiscono la documentazione autorevole. Quando un'evidenza runtime è un criterio di accettazione, mantenere la missione aperta e non usare `Closes #N` finché tale evidenza manca. `NON APPLICABILE` richiede una motivazione concreta e verificabile.
+
+Commit e push intermedi restano consentiti; quello terminale deve includere il closeout completato.
+
 ## Commit Style
 
 Use Conventional Commits, for example:

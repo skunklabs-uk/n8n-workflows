@@ -104,6 +104,13 @@ Quando la fonte attiva o il task corrente identifica già il lavoro successivo n
 
 Non fermarsi per passaggi già approvati, errori locali correggibili, verifiche risolvibili entro lo scope, stato documentale correggibile in modo univoco o fallback già autorizzati.
 
+## Governo, review e template
+
+- Le istruzioni di questo file sono vincolanti; ogni deroga richiede autorizzazione esplicita.
+- Ogni review deve indicare la revisione esaminata; se modifiche successive cambiano materialmente la superficie valutata, ripetere review e verifiche pertinenti.
+- Ogni testo rivolto a persone deve passare una revisione tecnica e `humanize-writing` quando disponibile, nel rispetto delle regole linguistiche del repository.
+- Il template Agent OS è uno scheletro, non una fonte autorevole: non copiarlo né introdurre percorsi, documenti o regole senza un requisito concreto.
+
 ## Commit Style
 
 Use Conventional Commits, for example:

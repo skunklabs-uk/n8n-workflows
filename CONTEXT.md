@@ -7,7 +7,7 @@
 **Workflow Repository**: This repository, intended to store n8n workflow JSON
 files and validation helpers.
 
-**Homelab Repository**: `/home/iingenito/projects/personal/homelab`, the GitOps
+**Homelab Repository**: `skunklabs-uk/homelab`, the GitOps
 source of truth for Kubernetes, ArgoCD, SOPS, CNPG, and app manifests.
 
 **Workflow JSON**: The JSON representation of an n8n workflow exported from n8n
@@ -50,13 +50,13 @@ or reset from the n8n UI.
 - The strategic source of truth for job-search positioning, role families,
   query seeds, scoring, market-observatory rules and calibration lives in the
   `resume` repository, under:
-  - `/home/iingenito/projects/personal/resume/profile/positioning.md`
-  - `/home/iingenito/projects/personal/resume/profile/target-roles.md`
-  - `/home/iingenito/projects/personal/resume/job-search/market-observatory-spec.md`
-  - `/home/iingenito/projects/personal/resume/job-search/linkedin-query-seeds.md`
-  - `/home/iingenito/projects/personal/resume/job-search/italy-market-sources.md`
-  - `/home/iingenito/projects/personal/resume/job-search/scoring-model.md`
-  - `/home/iingenito/projects/personal/resume/automations/n8n-workflows.md`
+  - `skunklabs-uk/resume/profile/positioning.md`
+  - `skunklabs-uk/resume/profile/target-roles.md`
+  - `skunklabs-uk/resume/job-search/market-observatory-spec.md`
+  - `skunklabs-uk/resume/job-search/linkedin-query-seeds.md`
+  - `skunklabs-uk/resume/job-search/italy-market-sources.md`
+  - `skunklabs-uk/resume/job-search/scoring-model.md`
+  - `skunklabs-uk/resume/automations/n8n-workflows.md`
 - Use a repository separate from `homelab` for workflow JSON.
 - The deployed import path is the Kubernetes Job owned by `homelab`; it is not a
   future/planned mechanism.

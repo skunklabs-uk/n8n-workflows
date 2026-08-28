@@ -127,7 +127,7 @@ Telegram e una pagina di approvazione su `hooks.skunklabs.uk`:
 Arbeitnow e RemoteOK, li normalizza e produce un report Markdown/JSON
 nell'output del workflow. La logica strategica di profilo, role family, query
 seed e scoring non vive qui: resta come source of truth nel repo
-`/home/iingenito/projects/personal/resume`.
+`skunklabs-uk/resume`.
 
 `workflows/job-search-email-alerts.json` legge gli alert email di lavoro
 arrivati su Gmail, inclusi LinkedIn e Indeed, estrae titolo/link/testo e applica
@@ -178,13 +178,13 @@ non alimentano `queryHealth`, che resta riservato agli alert salvati.
 Source of truth strategica:
 
 ```text
-/home/iingenito/projects/personal/resume/profile/positioning.md
-/home/iingenito/projects/personal/resume/profile/target-roles.md
-/home/iingenito/projects/personal/resume/job-search/market-observatory-spec.md
-/home/iingenito/projects/personal/resume/job-search/linkedin-query-seeds.md
-/home/iingenito/projects/personal/resume/job-search/italy-market-sources.md
-/home/iingenito/projects/personal/resume/job-search/scoring-model.md
-/home/iingenito/projects/personal/resume/automations/n8n-workflows.md
+skunklabs-uk/resume/profile/positioning.md
+skunklabs-uk/resume/profile/target-roles.md
+skunklabs-uk/resume/job-search/market-observatory-spec.md
+skunklabs-uk/resume/job-search/linkedin-query-seeds.md
+skunklabs-uk/resume/job-search/italy-market-sources.md
+skunklabs-uk/resume/job-search/scoring-model.md
+skunklabs-uk/resume/automations/n8n-workflows.md
 ```
 
 Il documento `docs/2026-06-11-job-search-radar-handoff.md` è un handoff storico:

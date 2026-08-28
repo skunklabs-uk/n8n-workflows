@@ -30,13 +30,15 @@ Before changing workflow files, scripts, or GitOps integration documents:
 3. Treat workflow JSON as executable automation, not passive data.
 4. Inspect workflow JSON for secrets before committing.
 5. Keep credentials, tokens, and variable values out of Git.
-6. Use `grill-with-docs` for architecture, workflow ownership, or deployment
-   model changes.
-7. Use `writing-plans` for multi-step implementation plans.
-8. Use `systematic-debugging` before fixing unexplained import, publication, or
-   runtime failures.
-9. Use `verification-before-completion` before claiming an import, validation,
-   or deployment path works.
+6. Review governing documents and challenge assumptions for architecture,
+   workflow ownership, or deployment model changes; use `grill-with-docs` when
+   available.
+7. Plan multi-step implementations proportionally; use `writing-plans` when
+   available.
+8. Diagnose unexplained import, publication, or runtime failures systematically
+   before fixing them; use `systematic-debugging` when available.
+9. Gather fresh evidence before claiming an import, validation, or deployment
+   path works; use `verification-before-completion` when available.
 10. Suggest Conventional Commit messages at the end of implementation work.
 
 ## Repository Boundaries
@@ -82,6 +84,10 @@ Before changing workflow files, scripts, or GitOps integration documents:
   native/upstream ownership can replace it with less complexity.
 
 ## Skill Routing
+
+The table lists preferred skills when they are available and materially useful.
+Equivalent direct inspection and verification remain valid; an unavailable
+skill does not block the work by itself.
 
 | Work type | Use these skills |
 |-----------|------------------|

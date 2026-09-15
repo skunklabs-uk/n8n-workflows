@@ -197,6 +197,30 @@ comportamento dell'importer.
 find workflows -type f -name '*.json' -print0 | xargs -0 -r -n1 jq empty
 ```
 
+## Collegamento seriale al Developer Workspace
+
+Per [Homelab #1265](https://github.com/skunklabs-uk/homelab/issues/1265),
+l’incarico documentale usa un checkout isolato con input qualificati,
+vincolato a repository e thread, branch, head e prompt. Il consumer è seriale.
+Il parent verifica anche gli oggetti Git presenti: i limiti di pubblicazione
+non limitano da soli le letture.
+
+Il child consegna un report senza modificare file. Il coordinatore lo verifica
+e registra l’accettazione con RETURN; l’applicazione della nota e il merge
+sono passaggi separati, su una normale PR discendente da main. Lo snapshot
+senza parent non viene integrato.
+
+Il report non legge né valida workflow applicativi, dati o credenziali.
+La CI ordinaria su main verifica la sintassi JSON con `jq empty`; non prova
+importabilità, pubblicazione, trigger o consegne esterne. Nello snapshot
+privo dei JSON quella verifica non viene eseguita. La preview HTTP non si
+applica alla nota documentale.
+
+Questo repository mantiene le definizioni workflow; Homelab mantiene importer
+e runtime. L’adozione non esegue importazioni né attiva automazioni.
+Per il collegamento, consultare il [runbook Developer Workspace](https://github.com/skunklabs-uk/developer-workspace/blob/main/docs/WORKSPACE-HANDOFF.md)
+e il [README del deployment Homelab](https://github.com/skunklabs-uk/homelab/blob/main/gitops/apps/developer-workspace/README.md).
+
 ## Runtime GitOps
 
 Per il comportamento corrente dell'importer usa la fonte Homelab:

@@ -118,13 +118,7 @@ Non fermarsi per passaggi già approvati, errori locali correggibili, verifiche 
 
 ## Closeout terminale RFC-0001
 
-Prima del merge terminale, del commit o push che conclude la missione oppure della chiusura dell'issue, completare il closeout previsto da RFC-0001.
-
-Verificare tutte le fonti autorevoli e i documenti `Active` interessati. Aggiornare quelli che mantengono la stessa funzione; archiviare nella stessa modifica quelli conclusi, superati, sostituiti, obsoleti o non più operativi. Prima dell'archiviazione trasferire fatti, decisioni, limiti, requisiti e obblighi di verifica ancora durevoli nella fonte corrente; rimuovere poi il documento da puntatori, indici, tracker, code di lavoro, sezioni sullo stato corrente e istruzioni operative.
-
-I commenti GitHub forniscono tracciabilità, ma non sostituiscono la documentazione autorevole. Quando un'evidenza runtime è un criterio di accettazione, mantenere la missione aperta e non usare `Closes #N` finché tale evidenza manca. `NON APPLICABILE` richiede una motivazione concreta e verificabile.
-
-Commit e push intermedi restano consentiti; quello terminale deve includere il closeout completato.
+Per il closeout applicare le sezioni 2, 6 e 7 della [RFC-0001 corrente](https://github.com/skunklabs-uk/agent-os/blob/main/rfcs/RFC-0001-principles.md).
 
 ## Commit Style
 

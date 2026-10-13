@@ -1,3 +1,5 @@
+**Status:** Active
+
 Per l’analisi di impatto e l’uso facoltativo di GitNexus, applicare
 [`AGENTS.md`](AGENTS.md), sezione «Repository intelligence». Le istruzioni
 seguenti valgono soltanto quando GitNexus è scelto per l’analisi pertinente.
@@ -45,3 +47,13 @@ This project is indexed by GitNexus as **n8n-workflows** (209 symbols, 344 relat
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+## Agent skills
+
+### Issue tracker
+
+Use GitHub Issues in `skunklabs-uk/n8n-workflows`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context repository. Read relevant domain documentation when available; no glossary or ADRs are required upfront. See `docs/agents/domain.md`.

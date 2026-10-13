@@ -1,0 +1,609 @@
+{
+  "id": "BaialupoSeoDaily",
+  "name": "Baialupo SEO Daily Inspection",
+  "active": false,
+  "nodes": [
+    {
+      "id": "3647507a-1849-5284-b4e7-28d1997e0bc4",
+      "name": "Daily schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "704d09e7-12ea-5ddd-95ff-ff1470689678",
+      "name": "Observation date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "observationDay",
+              "name": "observationDay",
+              "value": "={{ $now.setZone('Europe/Rome').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8a8f040a-e5b6-5980-8dbc-2e6aebf1123e",
+      "name": "Ensure history table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "baialupo_seo_daily",
+        "columns": {
+          "column": [
+            {
+              "name": "url",
+              "type": "string"
+            },
+            {
+              "name": "indexedBaseline",
+              "type": "boolean"
+            },
+            {
+              "name": "baselineDay",
+              "type": "string"
+            },
+            {
+              "name": "candidateState",
+              "type": "string"
+            },
+            {
+              "name": "candidateDay",
+              "type": "string"
+            },
+            {
+              "name": "consecutiveCount",
+              "type": "number"
+            },
+            {
+              "name": "observationDay",
+              "type": "string"
+            },
+            {
+              "name": "alertedState",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      }
+    },
+    {
+      "id": "092a13b4-e8ce-5d13-9514-0101ccb5f425",
+      "name": "Load history",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "baialupo_seo_daily"
+        },
+        "returnAll": true,
+        "filters": {
+          "conditions": []
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "4b495ccd-b807-5df5-9ee4-9ceb5c3c7cda",
+      "name": "Priority URL catalog",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "urls",
+              "name": "urls",
+              "value": [
+                "https://www.baialupo.com",
+                "https://www.baialupo.com/aviosuperficie",
+                "https://www.baialupo.com/posts",
+                "https://www.baialupo.com/baialupo",
+                "https://www.baialupo.com/guide",
+                "https://www.baialupo.com/news",
+                "https://www.baialupo.com/sicurezza",
+                "https://www.baialupo.com/events",
+                "https://www.baialupo.com/gallery",
+                "https://www.baialupo.com/market",
+                "https://www.baialupo.com/meteo",
+                "https://www.baialupo.com/flights",
+                "https://www.baialupo.com/news/balloon-cup-san-damiano-2026",
+                "https://www.baialupo.com/baialupo/nuova-galleria-fotografie-in-volo-xavier-van-erps",
+                "https://www.baialupo.com/news/open-day-aero-club-terni-2026",
+                "https://www.baialupo.com/news/easa-workshop-strutture-ag-cs23-vla-lsa",
+                "https://www.baialupo.com/news/montagnana-5-airshow-modellismo-2026",
+                "https://www.baialupo.com/sicurezza/ec130-t2-easa-ad-trasmissione-rotore-coda",
+                "https://www.baialupo.com/sicurezza/tbm-700-pad-26-106-carrello",
+                "https://www.baialupo.com/news/flyinmoli-vintage-festival-40s-2026",
+                "https://www.baialupo.com/news/fragneto-monforte-balloon-festival-2026",
+                "https://www.baialupo.com/guide/vfr-imc-addestramento-prevenzione-istruttori",
+                "https://www.baialupo.com/sicurezza/pipistrel-virus-velis-ad-2026-0137r1-porte",
+                "https://www.baialupo.com/sicurezza/easa-da42-pad-26-096-porta-passeggeri",
+                "https://www.baialupo.com/sicurezza/airac-10-26-vfr-cosa-controllare-1-ottobre"
+              ],
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "executeOnce": true,
+      "notes": "Campione approvato #27: 12 route statiche della sitemap senza privacy + 13 post pubblici più recenti secondo publicPosts/postDate al 2026-10-13T21:18:30Z. .editorial/posts.json sourceSha 4e5faa96bf86b205591294e529685fe814a85460; www/root da astro.config.mjs e src/consts.ts. Catalogo Git, NON qualificazione live. Verificare sitemap runtime prima della pubblicazione."
+    },
+    {
+      "id": "d807063d-0ef5-5629-a5b1-784ee79cf270",
+      "name": "Priority URLs",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {
+          "destinationFieldName": "url"
+        }
+      }
+    },
+    {
+      "id": "2674174e-add8-527d-8a2e-106da7e8d979",
+      "name": "Inspect priority URLs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({inspectionUrl: $json.url, siteUrl: 'sc-domain:baialupo.com', languageCode: 'en-US'}) }}",
+        "options": {
+          "timeout": 30000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false,
+      "notes": "Associare OAuth2 generico Google con scope https://www.googleapis.com/auth/webmasters.readonly; nessun ID Google inventato. Binding/property/quota da qualificare. Nessun retry automatico."
+    },
+    {
+      "id": "0390b757-fd5a-5cf5-8036-e8a23288239e",
+      "name": "Classify observations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Bounded to the 25 configured URLs. Durable state belongs only to native Data Table.\nconst history = new Map($('Load history').all().filter(item => item.json.url).map(item => [item.json.url, item.json]));\nconst day = $('Observation date').first().json.observationDay;\nconst yesterday = new Date(Date.parse(day + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);\nreturn $input.all().map((item, index) => {\n  const url = $('Priority URLs').all()[index].json.url;\n  const previous = history.get(url) || {};\n  const result = item.json.body || item.json;\n  const inspection = result.inspectionResult?.indexStatusResult;\n  // coverageState describes the observation; canonical is present for an indexed PASS.\n  // Missing data never replaces an indexed baseline or confirms a negative observation.\n  if (result.error || !inspection || !['PASS', 'FAIL', 'NEUTRAL'].includes(inspection.verdict)\n      || !inspection.coverageState || (inspection.verdict === 'PASS' && !inspection.googleCanonical)) {\n    const code = result.error?.code || item.json.statusCode || '';\n    const status = result.error?.status || (result.error ? 'OAUTH_O_RICHIESTA_FALLITA' : 'DATI_MANCANTI');\n    return {json: {url, valid: false, diagnostic: 'Inspection indisponibile: ' + code + ' ' + status\n      + '; nessun retry automatico, nessuna conferma o modifica della baseline'}, pairedItem: {item: index}};\n  }\n  const state = {url, indexedBaseline: previous.indexedBaseline === true,\n    baselineDay: previous.baselineDay || '', candidateState: previous.candidateState || '',\n    candidateDay: previous.candidateDay || '', consecutiveCount: previous.consecutiveCount || 0,\n    observationDay: previous.observationDay || '', alertedState: previous.alertedState || ''};\n  let shouldAlert = false;\n  let significant = '';\n  if (inspection.googleCanonical && inspection.googleCanonical !== url) {\n    significant = 'CANONICAL_INATTESO: ' + inspection.googleCanonical;\n  } else if (inspection.verdict === 'FAIL' && ['BLOCKED_BY_META_TAG', 'BLOCKED_BY_HTTP_HEADER'].includes(inspection.indexingState)) {\n    significant = inspection.indexingState;\n  } else if (['FAIL', 'NEUTRAL'].includes(inspection.verdict)) {\n    significant = 'NON_INDICIZZATA: ' + inspection.coverageState;\n  }\n  if (day > state.observationDay) {\n    state.observationDay = day;\n    if (inspection.verdict === 'PASS' && !significant) {\n      state.indexedBaseline = true;\n      state.baselineDay = day;\n      state.candidateState = '';\n      state.candidateDay = '';\n      state.consecutiveCount = 0;\n      state.alertedState = '';\n    } else if (significant && state.indexedBaseline) {\n      state.consecutiveCount = state.candidateState === significant && state.candidateDay === yesterday\n        ? Math.min(state.consecutiveCount + 1, 2) : 1;\n      state.candidateState = significant;\n      state.candidateDay = day;\n      shouldAlert = state.consecutiveCount === 2 && state.alertedState !== significant;\n      if (shouldAlert) state.alertedState = significant;\n    }\n  }\n  const message = ':warning: *Baialupo SEO: transizione negativa confermata*\\n'\n    + url + '\\nEsito: ' + significant + '\\nBaseline indicizzata: ' + state.baselineDay\n    + '\\nConferma: due osservazioni giornaliere consecutive; ' + yesterday + ' / ' + day\n    + '\\nProperty: sc-domain:baialupo.com. URL Inspection osserva l’indice Google, non il sito live.';\n  return {json: {...state, valid: true, shouldAlert, message}, pairedItem: {item: index}};\n});"
+      },
+      "notes": "Unico Code applicativo bounded: classificazione/conferma e formattazione. Stato e dedup solo Data Table nativa; prova di necessità approvata #27."
+    },
+    {
+      "id": "09af5766-297a-5655-92ca-eabcbbd4d4f5",
+      "name": "Valid observation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Valid observation",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "909c90f0-3b2a-5d59-98f5-8dd7e326d5d1",
+      "name": "Persist observation",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "baialupo_seo_daily"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "url",
+              "condition": "eq",
+              "keyValue": "={{ $json.url }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ $json.url }}",
+            "indexedBaseline": "={{ $json.indexedBaseline }}",
+            "baselineDay": "={{ $json.baselineDay }}",
+            "candidateState": "={{ $json.candidateState }}",
+            "candidateDay": "={{ $json.candidateDay }}",
+            "consecutiveCount": "={{ $json.consecutiveCount }}",
+            "observationDay": "={{ $json.observationDay }}",
+            "alertedState": "={{ $json.alertedState }}"
+          },
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "indexedBaseline",
+              "displayName": "indexedBaseline",
+              "type": "boolean",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baselineDay",
+              "displayName": "baselineDay",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidateState",
+              "displayName": "candidateState",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidateDay",
+              "displayName": "candidateDay",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "consecutiveCount",
+              "displayName": "consecutiveCount",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "observationDay",
+              "displayName": "observationDay",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "alertedState",
+              "displayName": "alertedState",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7b00b982-87e8-58e6-87f8-cbba4ae8ecdb",
+      "name": "Confirmed new negative",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Confirmed new negative",
+              "leftValue": "={{ $('Classify observations').item.json.shouldAlert }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b41a160f-e4a8-5a73-aef3-65a22d756d94",
+      "name": "Notify homelab-alerts",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        2420,
+        0
+      ],
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BNWAM4R8D",
+          "mode": "id"
+        },
+        "text": "={{ $('Classify observations').item.json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "unfurl_links": false,
+          "unfurl_media": false
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8oGPRjhwfgjEJwxH",
+          "name": "Slack Homelab Alerts"
+        }
+      },
+      "retryOnFail": false,
+      "notes": "Channel homelab-alerts qualificato read-only #27; accesso del binding n8n da qualificare. Dedup registra il tentativo, non una prova di consegna Slack."
+    },
+    {
+      "id": "baialupo-seo-inspection-error",
+      "name": "Report unavailable inspections",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        400
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "={{ 'Baialupo SEO: ' + $input.all().length + ' Inspection indisponibili. ' + $input.all().map(item => item.json.diagnostic.slice(0, 200)).join(' | ') }}"
+      },
+      "retryOnFail": false,
+      "notes": "Esito operativo esplicito e bounded per errori o dati mancanti; nessuna notifica Slack per gli errori. Con executionOrder v1 il ramo valido a y=0 viene completato prima di questo consumer a y=400."
+    }
+  ],
+  "connections": {
+    "Daily schedule": {
+      "main": [
+        [
+          {
+            "node": "Observation date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Observation date": {
+      "main": [
+        [
+          {
+            "node": "Ensure history table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure history table": {
+      "main": [
+        [
+          {
+            "node": "Load history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load history": {
+      "main": [
+        [
+          {
+            "node": "Priority URL catalog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Priority URL catalog": {
+      "main": [
+        [
+          {
+            "node": "Priority URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Priority URLs": {
+      "main": [
+        [
+          {
+            "node": "Inspect priority URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inspect priority URLs": {
+      "main": [
+        [
+          {
+            "node": "Classify observations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify observations": {
+      "main": [
+        [
+          {
+            "node": "Valid observation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid observation": {
+      "main": [
+        [
+          {
+            "node": "Persist observation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report unavailable inspections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist observation": {
+      "main": [
+        [
+          {
+            "node": "Confirmed new negative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmed new negative": {
+      "main": [
+        [
+          {
+            "node": "Notify homelab-alerts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome"
+  },
+  "pinData": {},
+  "tags": []
+}

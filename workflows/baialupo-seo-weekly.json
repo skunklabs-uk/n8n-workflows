@@ -1,0 +1,270 @@
+{
+  "id": "baialupoSeoWeekly",
+  "name": "Baialupo SEO Weekly",
+  "active": false,
+  "nodes": [
+    {
+      "id": "weekly-schedule",
+      "name": "Weekly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "reporting-interval",
+      "name": "Reporting Interval",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "start",
+              "name": "startDate",
+              "type": "string",
+              "value": "={{ $now.setZone('America/Los_Angeles').startOf('day').minus({days: 9}).toISODate() }}"
+            },
+            {
+              "id": "end",
+              "name": "endDate",
+              "type": "string",
+              "value": "={{ $now.setZone('America/Los_Angeles').startOf('day').minus({days: 3}).toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "query-dates",
+      "name": "Query Dates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Abaialupo.com/searchAnalytics/query",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {startDate: $('Reporting Interval').first().json.startDate, endDate: $('Reporting Interval').first().json.endDate, dimensions: ['date'], dataState: 'final', type: 'web', rowLimit: 7, startRow: 0} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false,
+      "notes": "Bind a qualified generic Google OAuth2 credential with webmasters.readonly scope and access to sc-domain:baialupo.com before live use. No Google credential ID is presumed."
+    },
+    {
+      "id": "query-pages",
+      "name": "Query Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Abaialupo.com/searchAnalytics/query",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {startDate: $('Reporting Interval').first().json.startDate, endDate: $('Reporting Interval').first().json.endDate, dimensions: ['page'], dataState: 'final', type: 'web', rowLimit: 10, startRow: 0} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false,
+      "notes": "Bind a qualified generic Google OAuth2 credential with webmasters.readonly scope and access to sc-domain:baialupo.com before live use. No Google credential ID is presumed."
+    },
+    {
+      "id": "query-queries",
+      "name": "Query Queries",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Abaialupo.com/searchAnalytics/query",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {startDate: $('Reporting Interval').first().json.startDate, endDate: $('Reporting Interval').first().json.endDate, dimensions: ['query'], dataState: 'final', type: 'web', rowLimit: 10, startRow: 0} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false,
+      "notes": "Bind a qualified generic Google OAuth2 credential with webmasters.readonly scope and access to sc-domain:baialupo.com before live use. No Google credential ID is presumed."
+    },
+    {
+      "id": "prepare-weekly-report",
+      "name": "Prepare Weekly Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const interval = $('Reporting Interval').first().json;\nfunction section(name) {\n  const response = $(name).first().json;\n  const status = response.statusCode || response.body?.error?.code;\n  if (response.error || status >= 400 || response.body?.error) {\n    const message = String(response.error?.message || response.error || '');\n    const kind = status === 401 || /oauth|credential|authentication|unauthorized/i.test(message) ? 'OAuth/autenticazione' : status === 403 ? 'accesso negato' : status === 429 ? 'rate-limit' : status ? 'errore API' : 'errore di trasporto';\n    return {rows: [], error: `${kind} — HTTP ${status || 'non disponibile'}; sezione indisponibile; nessun retry automatico.`};\n  }\n  return {rows: Array.isArray(response.body?.rows) ? response.body.rows : []};\n}\nconst dateSection = section('Query Dates');\nconst dates = dateSection.rows;\nconst present = new Set(dates.map(row => row.keys[0]));\nconst missing = [];\nfor (let day = 0; day < 7; day++) {\n  const date = new Date(interval.startDate + 'T12:00:00Z');\n  date.setUTCDate(date.getUTCDate() + day);\n  const key = date.toISOString().slice(0, 10);\n  if (!present.has(key)) missing.push(key);\n}\nconst text = [\n  '*Baialupo — report SEO settimanale*',\n  'Property: sc-domain:baialupo.com • ricerca web',\n  `Intervallo inclusivo: ${interval.startDate} → ${interval.endDate} (America/Los_Angeles)`,\n  'Maturità richiesta: dataState=final; fine intervallo tre giorni di calendario Pacific prima di oggi. L’offset non garantisce la presenza di tutte le date.',\n  `Copertura restituita: ${present.size}/7 giorni. Date assenti: ${missing.join(', ') || 'nessuna'}.`,\n];\nif (dateSection.error) text.push(`Date: ${dateSection.error}`);\nconst clicks = dates.reduce((sum, row) => sum + row.clicks, 0);\nconst impressions = dates.reduce((sum, row) => sum + row.impressions, 0);\nif (!dates.length || !(impressions > 0)) {\n  text.push('Totali: nessun dato utile; assenza di metriche non equivale a zero traffico accertato.');\n} else {\n  const ctr = (clicks / impressions * 100).toFixed(2) + '%';\n  const position = (dates.reduce((sum, row) => sum + row.position * row.impressions, 0) / impressions).toFixed(2);\n  text.push(`Totali delle sole date restituite — Clic: ${clicks} • Impressioni: ${impressions} • CTR: ${ctr} • Posizione: ${position} (pesata per impressioni).`);\n}\nfor (const [name, label] of [['Query Pages', 'Pagine'], ['Query Queries', 'Query']]) {\n  const result = section(name);\n  text.push(`*${label} principali — campione API (limite 10 righe, nessuna paginazione)*`);\n  if (result.error) text.push(`${label}: ${result.error}`);\n  else if (!result.rows.length) text.push(`${label}: nessun dato utile.`);\n  for (const row of result.rows) text.push(`${row.keys[0]} — clic ${row.clicks}, impressioni ${row.impressions}`);\n}\ntext.push('L’API restituisce le righe principali, non tutte; i campioni pagina/query non ricostruiscono i totali. Nessun confronto storico o attribuzione SEO.');\nreturn [{json: {text: text.join('\\n')}}];\n"
+      }
+    },
+    {
+      "id": "notify-homelab-alerts",
+      "name": "Notify homelab-alerts",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BNWAM4R8D",
+          "mode": "id"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "unfurl_links": false,
+          "unfurl_media": false
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8oGPRjhwfgjEJwxH",
+          "name": "Slack Homelab Alerts"
+        }
+      },
+      "retryOnFail": false,
+      "notes": "Existing repository credential stub. Access to homelab-alerts must be qualified in n8n before live publication; channel visibility alone does not prove this binding."
+    }
+  ],
+  "connections": {
+    "Weekly Schedule": {
+      "main": [
+        [
+          {
+            "node": "Reporting Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reporting Interval": {
+      "main": [
+        [
+          {
+            "node": "Query Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Dates": {
+      "main": [
+        [
+          {
+            "node": "Query Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Pages": {
+      "main": [
+        [
+          {
+            "node": "Query Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Queries": {
+      "main": [
+        [
+          {
+            "node": "Prepare Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "Notify homelab-alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "pinData": {}
+}

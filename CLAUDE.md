@@ -1,3 +1,5 @@
+**Status:** Active
+
 Per l’analisi di impatto e l’uso facoltativo di GitNexus, applicare
 [`AGENTS.md`](AGENTS.md), sezione «Repository intelligence». Le istruzioni
 seguenti valgono soltanto quando GitNexus è scelto per l’analisi pertinente.

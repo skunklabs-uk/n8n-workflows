@@ -323,6 +323,13 @@ credenziale Gmail presumendone la compatibilità. I nodi Slack riusano lo stub
 non dimostra che il binding n8n abbia accesso al canale. Nessun segreto va
 aggiunto ai JSON.
 
+Errori o risposte Inspection incomplete terminano l'esecuzione giornaliera con
+un riepilogo bounded nel nodo `Report unavailable inspections` (Stop And Error
+nativo), dopo aver persistito le osservazioni valide. Non inviano alert Slack,
+non modificano la baseline dell'URL interessato e non avviano retry automatici.
+La posizione del ramo di errore e `executionOrder: v1` fanno parte di questo
+ordine operativo: verificarlo nuovamente se si modifica il routing.
+
 ### Prove locali
 
 Con Docker disponibile, scarica il motore ufficiale pinned e avvia le prove:
@@ -337,6 +344,9 @@ I test usano container e database effimeri, senza porte esposte e con
 clock nelle copie temporanee; logica e connessioni applicative restano native.
 La prova giornaliera usa un server n8n e una Data Table reali: la CLI
 `execute` di questa versione non inizializza il modulo Data Table.
+Il trasporto Slack giornaliero è sostituito da un sink HTTP locale nello stesso
+container, raggiungibile soltanto via loopback: osserva le consegne anche quando
+l'esecuzione termina successivamente in errore, senza simulare il motore n8n.
 La sola copia fixture viene pubblicata nel database locale usa-e-getta per
 esercitare il webhook; non è una pubblicazione del workflow originale.
 Queste prove non qualificano OAuth, quota, consegna Slack o trigger live.

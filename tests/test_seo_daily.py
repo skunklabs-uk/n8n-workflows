@@ -38,6 +38,7 @@ class DailyInspectionTest(unittest.TestCase):
                 "-v", self.volume + ":/home/node/.n8n",
                 "-v", self.directory.name + ":/fixtures",
                 "-e", "N8N_USER_FOLDER=/home/node",
+                "-e", "N8N_LOG_LEVEL=debug",
                 "-e", "N8N_DIAGNOSTICS_ENABLED=false", "-e", "N8N_VERSION_NOTIFICATIONS_ENABLED=false",
                 "-e", "N8N_ENCRYPTION_KEY=daily-local-fixture-only"]
 
@@ -50,6 +51,15 @@ class DailyInspectionTest(unittest.TestCase):
 
     def start_fixture(self):
         workflow = json.loads(WORKFLOW.read_text())
+        # Observe the Slack boundary even when a later native node fails the execution.
+        Path(self.directory.name, "slack-fixture.js").write_text(
+            "const http=require('node:http');const messages=[];"
+            "http.createServer(async(req,res)=>{"
+            "if(req.method==='POST'){let body='';for await(const c of req)body+=c;"
+            "messages.push(JSON.parse(body).text);}else if(req.method==='DELETE')messages.length=0;"
+            "res.setHeader('Content-Type','application/json');"
+            "res.end(JSON.stringify(req.method==='GET'?messages:{ok:true}));"
+            "}).listen(5677,'127.0.0.1');")
         workflow = copy.deepcopy(workflow)
         for item in workflow["nodes"]:
             if item["name"] == "Daily schedule":
@@ -64,8 +74,9 @@ class DailyInspectionTest(unittest.TestCase):
             elif item["name"] == "Inspect priority URLs":
                 # Only Google/time/trigger/Slack boundaries change. No application JS is extracted.
                 fixture = ("const url = $json.url || " + json.dumps(URL) + "; "
-                           "const result = url === " + json.dumps(URL)
-                           + " ? $('Daily schedule').first().json.body.result"
+                           "const request = $('Daily schedule').first().json.body; "
+                           "const result = url === (request.targetUrl || " + json.dumps(URL) + ")"
+                           + " ? request.result"
                            + " : {inspectionResult:{indexStatusResult:{verdict:'PASS',coverageState:'Submitted and indexed',"
                            "indexingState:'INDEXING_ALLOWED',robotsTxtState:'ALLOWED',pageFetchState:'SUCCESSFUL',googleCanonical:url}}}; "
                            "return {json: result};")
@@ -74,10 +85,11 @@ class DailyInspectionTest(unittest.TestCase):
                 item.pop("credentials", None)
             elif item["name"] == "Notify homelab-alerts":
                 text = item["parameters"]["text"]
-                item.update(type="n8n-nodes-base.set", typeVersion=3.4,
-                            parameters={"assignments": {"assignments": [
-                                {"id": "text", "name": "capturedSlackText", "type": "string", "value": text}]},
-                                "options": {}})
+                item.update(type="n8n-nodes-base.httpRequest", typeVersion=4.4,
+                            parameters={"method": "POST", "url": "http://127.0.0.1:5677/slack",
+                                        "sendBody": True, "bodyParameters": {"parameters": [
+                                            {"name": "text", "value": text}]},
+                                        "options": {"timeout": 10000}})
                 item.pop("credentials", None)
         Path(self.directory.name, "workflow.json").write_text(json.dumps(workflow))
         self.command(self.docker_args() + ["--rm", IMAGE, "import:workflow", "--input=/fixtures/workflow.json"])
@@ -86,26 +98,33 @@ class DailyInspectionTest(unittest.TestCase):
         self.command(self.docker_args() + ["--rm", IMAGE, "publish:workflow", "--id=" + workflow["id"]])
         self.addCleanup(subprocess.run, ["docker", "rm", "--force", self.container],
                         check=False, capture_output=True)
-        self.command(self.docker_args() + ["--detach", "--name", self.container, IMAGE, "start"])
+        self.command(self.docker_args() + ["--detach", "--name", self.container,
+                                         "--entrypoint", "/bin/sh", IMAGE, "-c",
+                                         "node /fixtures/slack-fixture.js & exec n8n start"])
         ready = ("for(let i=0;i<120;i++){"
-                 "try {const r=await fetch('http://127.0.0.1:5678/healthz/readiness');if(r.ok)process.exit(0);}catch{}"
+                 "try {const r=await fetch('http://127.0.0.1:5678/healthz/readiness');"
+                 "const s=await fetch('http://127.0.0.1:5677/slack');if(r.ok&&s.ok)process.exit(0);}catch{}"
                  "await new Promise(r=>setTimeout(r,500));}process.exit(1);")
         self.command(["docker", "exec", self.container, "node", "--input-type=module", "-e", ready])
         self.started = True
 
-    def observe(self, day, result):
+    def post_observation(self, day, result, url=URL):
         if not self.started:
             self.start_fixture()
-        request = json.dumps({"day": day, "result": result})
-        script = ("const r=await fetch('http://127.0.0.1:5678/webhook/daily-fixture',"
+        request = json.dumps({"day": day, "result": result, "targetUrl": url})
+        script = ("await fetch('http://127.0.0.1:5677/slack',{method:'DELETE'});"
+                  "const r=await fetch('http://127.0.0.1:5678/webhook/daily-fixture',"
                   "{method:'POST',headers:{'Content-Type':'application/json'},body:process.argv[1]});"
-                  "const text=await r.text();if(!r.ok){console.error(text);process.exit(1);}console.log(text);")
+                  "const body=await r.text();"
+                  "const alerts=await(await fetch('http://127.0.0.1:5677/slack')).json();"
+                  "console.log(JSON.stringify({status:r.status,body,alerts}));")
         raw = self.command(["docker", "exec", self.container, "node", "--input-type=module", "-e", script, request])
-        outputs = json.loads(raw) if raw.strip() else []
-        if not isinstance(outputs, list):
-            self.fail("Unexpected native webhook response: " + raw)
-        # Only the replaced Slack transport can produce this field.
-        return [item["capturedSlackText"] for item in outputs if "capturedSlackText" in item]
+        return json.loads(raw)
+
+    def observe(self, day, result, url=URL, expected_failure=False):
+        response = self.post_observation(day, result, url)
+        self.assertEqual(response["status"], 500 if expected_failure else 200, response["body"])
+        return response["alerts"]
 
     def test_indexed_baseline_requires_two_daily_negatives_and_alerts_once(self):
         indexed = {"inspectionResult": {"indexStatusResult": {
@@ -155,11 +174,14 @@ class DailyInspectionTest(unittest.TestCase):
         self.assertEqual(self.observe("2026-10-01", indexed), [])
         self.assertEqual(self.observe("2026-10-02", negative), [])
         self.assertEqual(self.observe("2026-10-03", {"error": {
-            "code": 403, "status": "PERMISSION_DENIED", "message": "Insufficient property permissions"}}), [])
+            "code": 403, "status": "PERMISSION_DENIED", "message": "Insufficient property permissions"}},
+            expected_failure=True), [])
         self.assertEqual(self.observe("2026-10-04", {"error": {
-            "code": 429, "status": "RESOURCE_EXHAUSTED", "message": "Inspection quota exhausted"}}), [])
+            "code": 429, "status": "RESOURCE_EXHAUSTED", "message": "Inspection quota exhausted"}},
+            expected_failure=True), [])
         self.assertEqual(self.observe("2026-10-05", {
-            "inspectionResult": {"indexStatusResult": {"verdict": "PASS"}}}), [])
+            "inspectionResult": {"indexStatusResult": {"verdict": "PASS"}}},
+            expected_failure=True), [])
         self.assertEqual(self.observe("2026-10-06", negative), [])
         alerts = self.observe("2026-10-07", negative)
         self.assertEqual(len(alerts), 1)
@@ -194,6 +216,26 @@ class DailyInspectionTest(unittest.TestCase):
         alerts = self.observe("2026-10-09", lost)
         self.assertEqual(len(alerts), 1)
         self.assertIn("Baseline indicizzata: 2026-10-07", alerts[0])
+
+    def test_oauth_failure_is_operationally_explicit_without_losing_other_url_baselines(self):
+        failure = self.post_observation("2026-10-01", {"error": {
+            "code": 401, "status": "UNAUTHENTICATED", "message": "OAuth credential unavailable"}})
+        self.assertEqual(failure["status"], 500, failure["body"])
+        self.assertEqual(failure["alerts"], [])
+        logs = subprocess.run(["docker", "logs", self.container], capture_output=True, text=True, check=True)
+        diagnostics = logs.stdout + logs.stderr
+        self.assertIn("401", diagnostics)
+        self.assertIn("UNAUTHENTICATED", diagnostics)
+        other_url = "https://www.baialupo.com/posts"
+        negative = {"inspectionResult": {"indexStatusResult": {
+            "verdict": "FAIL", "coverageState": "Excluded by noindex tag",
+            "indexingState": "BLOCKED_BY_META_TAG", "robotsTxtState": "ALLOWED",
+            "pageFetchState": "SUCCESSFUL"}}}
+        self.assertEqual(self.observe("2026-10-02", negative, other_url), [])
+        alerts = self.observe("2026-10-03", negative, other_url)
+        self.assertEqual(len(alerts), 1)
+        self.assertIn(other_url, alerts[0])
+        self.assertIn("Baseline indicizzata: 2026-10-01", alerts[0])
 
 
 if __name__ == "__main__":

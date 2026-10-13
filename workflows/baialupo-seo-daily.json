@@ -451,6 +451,22 @@
       },
       "retryOnFail": false,
       "notes": "Channel homelab-alerts qualificato read-only #27; accesso del binding n8n da qualificare. Dedup registra il tentativo, non una prova di consegna Slack."
+    },
+    {
+      "id": "baialupo-seo-inspection-error",
+      "name": "Report unavailable inspections",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        400
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "={{ 'Baialupo SEO: ' + $input.all().length + ' Inspection indisponibili. ' + $input.all().map(item => item.json.diagnostic.slice(0, 200)).join(' | ') }}"
+      },
+      "retryOnFail": false,
+      "notes": "Esito operativo esplicito e bounded per errori o dati mancanti; nessuna notifica Slack per gli errori. Con executionOrder v1 il ramo valido a y=0 viene completato prima di questo consumer a y=400."
     }
   ],
   "connections": {
@@ -551,7 +567,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Report unavailable inspections",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Persist observation": {

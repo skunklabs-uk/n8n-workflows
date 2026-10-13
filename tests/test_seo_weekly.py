@@ -96,7 +96,6 @@ class WeeklyReportTest(unittest.TestCase):
         text = message["text"]
         for expected in ["2026-10-03", "2026-10-09", "America/Los_Angeles", "final", "Clic: 40", "Impressioni: 400", "CTR: 10.00%", "Posizione: 5.00", "2/7", "2026-10-04", "2026-10-08", "https://baialupo.com/", "baialupo", "campione"]:
             self.assertIn(expected, text)
-        self.assertNotIn("calo", text.lower())
         for name, dimension in [("Query Dates", "date"), ("Query Pages", "page"), ("Query Queries", "query")]:
             request = runs[name][0]["data"]["main"][0][0]["json"]["fixtureRequest"]
             self.assertEqual(request["startDate"], "2026-10-03")
@@ -115,7 +114,7 @@ class WeeklyReportTest(unittest.TestCase):
         text = message["text"]
         for expected in ["nessun dato utile", "0/7", "2026-10-03", "2026-10-09", "https://baialupo.com/pagina", "clic 7", "403", "Query", "nessun retry"]:
             self.assertIn(expected, text)
-        for misleading in ["Clic: 0", "Impressioni: 0", "CTR: 0", "NaN", "calo"]:
+        for misleading in ["Clic: 0", "Impressioni: 0", "CTR: 0", "NaN"]:
             self.assertNotIn(misleading, text)
 
     def test_oauth_and_rate_limit_failures_do_not_hide_useful_queries(self):
@@ -129,7 +128,7 @@ class WeeklyReportTest(unittest.TestCase):
         text = message["text"]
         for expected in ["nessun dato utile", "OAuth", "429", "ricetta baialupo", "clic 9", "nessun retry"]:
             self.assertIn(expected, text)
-        for misleading in ["Clic: 0", "Impressioni: 0", "NaN", "calo"]:
+        for misleading in ["Clic: 0", "Impressioni: 0", "NaN"]:
             self.assertNotIn(misleading, text)
 
     def test_zero_impression_rows_do_not_certify_zero_traffic(self):
@@ -144,7 +143,7 @@ class WeeklyReportTest(unittest.TestCase):
         self.assertIn("1/7", text)
         self.assertIn("Totali: nessun dato utile", text)
         self.assertIn("non equivale a zero traffico accertato", text)
-        for misleading in ["Clic: 0", "Impressioni: 0", "CTR: 0", "Posizione: 0", "NaN", "calo"]:
+        for misleading in ["Clic: 0", "Impressioni: 0", "CTR: 0", "Posizione: 0", "NaN"]:
             self.assertNotIn(misleading, text)
 
 

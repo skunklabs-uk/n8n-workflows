@@ -28,6 +28,7 @@ class DailyInspectionTest(unittest.TestCase):
         self.volume = "n8n-seo-daily-" + uuid.uuid4().hex
         self.container = self.volume
         self.started = False
+        self.route_ready = False
         subprocess.run(["docker", "volume", "create", self.volume], check=True, capture_output=True)
         self.addCleanup(self.directory.cleanup)
         self.addCleanup(subprocess.run, ["docker", "volume", "rm", self.volume],
@@ -112,14 +113,22 @@ class DailyInspectionTest(unittest.TestCase):
         if not self.started:
             self.start_fixture()
         request = json.dumps({"day": day, "result": result, "targetUrl": url})
+        # Health readiness can precede webhook activation. A startup 404 never executes
+        # the workflow; wait only for this registration gap, never retry an observation.
         script = ("await fetch('http://127.0.0.1:5677/slack',{method:'DELETE'});"
-                  "const r=await fetch('http://127.0.0.1:5678/webhook/daily-fixture',"
+                  "const attempts=" + str(1 if self.route_ready else 120) + ";let r,body;"
+                  "for(let i=0;i<attempts;i++){"
+                  "r=await fetch('http://127.0.0.1:5678/webhook/daily-fixture',"
                   "{method:'POST',headers:{'Content-Type':'application/json'},body:process.argv[1]});"
-                  "const body=await r.text();"
+                  "body=await r.text();"
+                  "if(r.status!==404||!body.includes('not registered'))break;"
+                  "await new Promise(resolve=>setTimeout(resolve,500));}"
                   "const alerts=await(await fetch('http://127.0.0.1:5677/slack')).json();"
                   "console.log(JSON.stringify({status:r.status,body,alerts}));")
         raw = self.command(["docker", "exec", self.container, "node", "--input-type=module", "-e", script, request])
-        return json.loads(raw)
+        response = json.loads(raw)
+        self.route_ready = response["status"] != 404 or "not registered" not in response["body"]
+        return response
 
     def observe(self, day, result, url=URL, expected_failure=False):
         response = self.post_observation(day, result, url)

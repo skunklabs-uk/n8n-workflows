@@ -298,3 +298,57 @@ Evidenza E2E della Wave `homelab#659` (2026-08-09):
   consegna Slack;
 - workflow mergiato in `n8n-workflows#3`; merge commit
   `980891b7a9b7970000e373276761cc68ef100077`.
+
+## PoC SEO Baialupo
+
+La specifica, le decisioni approvate e le prove della missione sono in
+[n8n-workflows #27](https://github.com/skunklabs-uk/n8n-workflows/issues/27).
+Il repository contiene due definizioni nuove, da mantenere **unpublished**
+finché binding e autorizzazioni di rilascio non sono qualificati:
+
+- `workflows/baialupo-seo-daily.json`: URL Inspection e storico nella Data Table
+  nativa `baialupo_seo_daily`. Il campione versionato deriva da sorgenti Git,
+  non da una verifica della sitemap live. La conferma e la deduplica non
+  garantiscono exactly-once attraverso crash, esecuzioni concorrenti o errori
+  di consegna Slack.
+- `workflows/baialupo-seo-weekly.json`: Search Analytics e report settimanale.
+  I totali derivano dalle sole righe per data; pagine e query sono campioni
+  separati, non una ricostruzione del traffico totale.
+
+Prima di qualsiasi uso live, associa ai nodi Google una credenziale OAuth2
+generica con scope `https://www.googleapis.com/auth/webmasters.readonly` e
+verifica l'accesso alla property `sc-domain:baialupo.com`. Non riutilizzare una
+credenziale Gmail presumendone la compatibilità. I nodi Slack riusano lo stub
+`Slack Homelab Alerts` e il canale `homelab-alerts` (`C0BNWAM4R8D`): lo stub
+non dimostra che il binding n8n abbia accesso al canale. Nessun segreto va
+aggiunto ai JSON.
+
+### Prove locali
+
+Con Docker disponibile, scarica il motore ufficiale pinned e avvia le prove:
+
+```bash
+docker pull docker.n8n.io/n8nio/n8n:2.42.3@sha256:240eaa2a3d491adac5817aa4c3f1c521bb18ec79f6e448517158d5220ee0f37b
+python3 -m unittest discover -s tests -p 'test_seo_*.py' -v
+```
+
+I test usano container e database effimeri, senza porte esposte e con
+`--network none`. Sostituiscono soltanto Google, trasporto Slack, trigger e
+clock nelle copie temporanee; logica e connessioni applicative restano native.
+La prova giornaliera usa un server n8n e una Data Table reali: la CLI
+`execute` di questa versione non inizializza il modulo Data Table.
+La sola copia fixture viene pubblicata nel database locale usa-e-getta per
+esercitare il webhook; non è una pubblicazione del workflow originale.
+Queste prove non qualificano OAuth, quota, consegna Slack o trigger live.
+
+### Rilascio e rollback
+
+Merge, import GitOps, stato published ed esecuzione live restano gate distinti
+secondo il runbook Homelab dell'importer. Nessuno è autorizzato dal semplice
+successo delle fixture. Prima dell'import giornaliero, qualifica anche il
+catalogo URL e la disponibilità della Data Table nel runtime effettivo.
+
+Se occorre fermare il PoC, rendi unpublished i due workflow e verifica che i
+trigger non siano più caricati nel processo; per ripristinare le definizioni,
+segui il rollback del pin Git nel runbook Homelab. Conserva lo storico se vuoi
+mantenere baseline e deduplica: svuotarlo fa ripartire dalle prime osservazioni.

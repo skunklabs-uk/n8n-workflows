@@ -152,19 +152,19 @@
                 "https://www.baialupo.com/market",
                 "https://www.baialupo.com/meteo",
                 "https://www.baialupo.com/flights",
-                "https://www.baialupo.com/privacy",
+                "https://www.baialupo.com/news/balloon-cup-san-damiano-2026",
                 "https://www.baialupo.com/baialupo/nuova-galleria-fotografie-in-volo-xavier-van-erps",
-                "https://www.baialupo.com/news/easa-workshop-strutture-ag-cs23-vla-lsa",
                 "https://www.baialupo.com/news/open-day-aero-club-terni-2026",
+                "https://www.baialupo.com/news/easa-workshop-strutture-ag-cs23-vla-lsa",
                 "https://www.baialupo.com/news/montagnana-5-airshow-modellismo-2026",
-                "https://www.baialupo.com/sicurezza/tbm-700-pad-26-106-carrello",
-                "https://www.baialupo.com/sicurezza/pipistrel-virus-velis-ad-2026-0137r1-porte",
                 "https://www.baialupo.com/sicurezza/ec130-t2-easa-ad-trasmissione-rotore-coda",
+                "https://www.baialupo.com/sicurezza/tbm-700-pad-26-106-carrello",
+                "https://www.baialupo.com/news/flyinmoli-vintage-festival-40s-2026",
                 "https://www.baialupo.com/news/fragneto-monforte-balloon-festival-2026",
-                "https://www.baialupo.com/sicurezza/easa-da42-pad-26-096-porta-passeggeri",
-                "https://www.baialupo.com/sicurezza/rotax-915-916-asb-2026-002-corpo-valvola-turbo",
                 "https://www.baialupo.com/guide/vfr-imc-addestramento-prevenzione-istruttori",
-                "https://www.baialupo.com/guide/amatoriali-sep-rinnovo-familiarizzazione-istruttore"
+                "https://www.baialupo.com/sicurezza/pipistrel-virus-velis-ad-2026-0137r1-porte",
+                "https://www.baialupo.com/sicurezza/easa-da42-pad-26-096-porta-passeggeri",
+                "https://www.baialupo.com/sicurezza/airac-10-26-vfr-cosa-controllare-1-ottobre"
               ],
               "type": "array"
             }
@@ -173,7 +173,7 @@
         "options": {}
       },
       "executeOnce": true,
-      "notes": "25 URL dal sitemap src/pages/sitemap.xml.ts + .editorial/posts.json sourceSha 4e5faa96bf86b205591294e529685fe814a85460 (2026-10-13), regole publicPosts. www/root da astro.config.mjs e src/consts.ts. Catalogo Git, NON qualificazione live. Verificare sitemap runtime prima della pubblicazione."
+      "notes": "Campione approvato #27: 12 route statiche della sitemap senza privacy + 13 post pubblici più recenti secondo publicPosts/postDate al 2026-10-13T21:18:30Z. .editorial/posts.json sourceSha 4e5faa96bf86b205591294e529685fe814a85460; www/root da astro.config.mjs e src/consts.ts. Catalogo Git, NON qualificazione live. Verificare sitemap runtime prima della pubblicazione."
     },
     {
       "id": "d807063d-0ef5-5629-a5b1-784ee79cf270",

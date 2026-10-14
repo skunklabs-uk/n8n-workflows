@@ -303,8 +303,9 @@ Evidenza E2E della Wave `homelab#659` (2026-08-09):
 
 La specifica, le decisioni approvate e le prove della missione sono in
 [n8n-workflows #27](https://github.com/skunklabs-uk/n8n-workflows/issues/27).
-Il repository contiene due definizioni nuove, da mantenere **unpublished**
-finché binding e autorizzazioni di rilascio non sono qualificati:
+Il repository contiene due workflow. Binding, prove reali e stato di rilascio
+sono documentati in #27; per nuove installazioni mantenerli **unpublished**
+fino alla qualificazione delle credenziali e all'autorizzazione di rilascio:
 
 - `workflows/baialupo-seo-daily.json`: URL Inspection e storico nella Data Table
   nativa `baialupo_seo_daily`. Il campione versionato deriva da sorgenti Git,

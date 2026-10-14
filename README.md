@@ -315,13 +315,20 @@ finché binding e autorizzazioni di rilascio non sono qualificati:
   I totali derivano dalle sole righe per data; pagine e query sono campioni
   separati, non una ricostruzione del traffico totale.
 
-Prima di qualsiasi uso live, associa ai nodi Google una credenziale OAuth2
-generica con scope `https://www.googleapis.com/auth/webmasters.readonly` e
-verifica l'accesso alla property `sc-domain:baialupo.com`. Non riutilizzare una
-credenziale Gmail presumendone la compatibilità. I nodi Slack riusano lo stub
-`Slack Homelab Alerts` e il canale `homelab-alerts` (`C0BNWAM4R8D`): lo stub
-non dimostra che il binding n8n abbia accesso al canale. Nessun segreto va
-aggiunto ai JSON.
+I nodi Google referenziano la credenziale runtime reale `Baialupo GSC readonly`
+(`25935ad8-e2b4-4e40-bc64-12c991fc5049`), OAuth2 generica con il solo scope
+`https://www.googleapis.com/auth/webmasters.readonly`. Client e secret sono
+custoditi in Bitwarden e nel sistema cifrato di n8n, non nei JSON. I workflow
+interrogano direttamente Google Search Console: non usano GSC Wizard, il
+prodotto con trial scaduto.
+
+Il consenso OAuth non dimostra che la Search Console API sia abilitata nel
+progetto del client o che l'account acceda a `sc-domain:baialupo.com`: qualificare
+separatamente questi prerequisiti prima del publish. Lo stato corrente e le
+prove restano in #27. Non riutilizzare una credenziale Gmail presumendone la
+compatibilità. I nodi Slack riusano `Slack Homelab Alerts` e il canale
+`homelab-alerts` (`C0BNWAM4R8D`): verificare la consegna effettiva e l'app nel
+canale, non solo la validità del token. Nessun segreto va aggiunto ai JSON.
 
 Errori o risposte Inspection incomplete terminano l'esecuzione giornaliera con
 un riepilogo bounded nel nodo `Report unavailable inspections` (Stop And Error

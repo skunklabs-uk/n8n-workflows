@@ -80,9 +80,15 @@
           }
         }
       },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "25935ad8-e2b4-4e40-bc64-12c991fc5049",
+          "name": "Baialupo GSC readonly"
+        }
+      },
       "onError": "continueRegularOutput",
       "retryOnFail": false,
-      "notes": "Bind a qualified generic Google OAuth2 credential with webmasters.readonly scope and access to sc-domain:baialupo.com before live use. No Google credential ID is presumed."
+      "notes": "Credenziale OAuth2 runtime reale, con consenso webmasters.readonly verificato in #27. Abilitazione API, accesso alla property e quota da qualificare prima dell'uso live."
     },
     {
       "id": "query-pages",
@@ -112,9 +118,15 @@
           }
         }
       },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "25935ad8-e2b4-4e40-bc64-12c991fc5049",
+          "name": "Baialupo GSC readonly"
+        }
+      },
       "onError": "continueRegularOutput",
       "retryOnFail": false,
-      "notes": "Bind a qualified generic Google OAuth2 credential with webmasters.readonly scope and access to sc-domain:baialupo.com before live use. No Google credential ID is presumed."
+      "notes": "Credenziale OAuth2 runtime reale, con consenso webmasters.readonly verificato in #27. Abilitazione API, accesso alla property e quota da qualificare prima dell'uso live."
     },
     {
       "id": "query-queries",
@@ -144,9 +156,15 @@
           }
         }
       },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "25935ad8-e2b4-4e40-bc64-12c991fc5049",
+          "name": "Baialupo GSC readonly"
+        }
+      },
       "onError": "continueRegularOutput",
       "retryOnFail": false,
-      "notes": "Bind a qualified generic Google OAuth2 credential with webmasters.readonly scope and access to sc-domain:baialupo.com before live use. No Google credential ID is presumed."
+      "notes": "Credenziale OAuth2 runtime reale, con consenso webmasters.readonly verificato in #27. Abilitazione API, accesso alla property e quota da qualificare prima dell'uso live."
     },
     {
       "id": "prepare-weekly-report",

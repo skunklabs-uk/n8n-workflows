@@ -224,9 +224,15 @@
           }
         }
       },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "25935ad8-e2b4-4e40-bc64-12c991fc5049",
+          "name": "Baialupo GSC readonly"
+        }
+      },
       "onError": "continueRegularOutput",
       "retryOnFail": false,
-      "notes": "Associare OAuth2 generico Google con scope https://www.googleapis.com/auth/webmasters.readonly; nessun ID Google inventato. Binding/property/quota da qualificare. Nessun retry automatico."
+      "notes": "Credenziale OAuth2 runtime reale, con consenso webmasters.readonly verificato in #27. Abilitazione API, accesso alla property e quota restano gate di qualificazione prima della pubblicazione. Nessun retry automatico."
     },
     {
       "id": "0390b757-fd5a-5cf5-8036-e8a23288239e",

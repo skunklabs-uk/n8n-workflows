@@ -1,0 +1,154 @@
+{
+  "id": "pocPromptLoader20261107",
+  "name": "PoC - carica prompt e contratto",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Avvio manuale",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "sample",
+      "name": "Incarico di prova",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{chiave:'job-05'}}];"
+      }
+    },
+    {
+      "id": "called",
+      "name": "Chiamato da un workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "input",
+      "name": "Verifica chiave",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const chiave = $input.first().json.chiave;\nif (typeof chiave !== 'string' || !/^job-\\d{2}$/.test(chiave)) throw new Error('Specificare una chiave incarico valida, per esempio job-05');\nreturn [{json:{chiave}}];"
+      }
+    },
+    {
+      "id": "read",
+      "name": "Leggi configurazione prompt",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "IAYVDsLnIrU6D7s8"
+        },
+        "returnAll": true
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "validate",
+      "name": "Seleziona e verifica prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const key = $('Verifica chiave').first().json.chiave;\nconst rows = $input.all().map(item => item.json);\nfunction exactlyOne(k) {\n  const found = rows.filter(row => row.chiave === k);\n  if (found.length !== 1) throw new Error(`Chiave ${k}: attesa una riga, trovate ${found.length}`);\n  if (typeof found[0].prompt !== 'string' || !found[0].prompt.trim()) throw new Error(`Prompt vuoto per ${k}`);\n  return found[0];\n}\nconst common = exactlyOne('contratto-comune');\nconst job = exactlyOne(key);\nreturn [{json:{chiave:job.chiave,titolo:job.titolo,contratto_comune:common.prompt,prompt:job.prompt}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Avvio manuale": {
+      "main": [
+        [
+          {
+            "node": "Incarico di prova",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incarico di prova": {
+      "main": [
+        [
+          {
+            "node": "Verifica chiave",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chiamato da un workflow": {
+      "main": [
+        [
+          {
+            "node": "Verifica chiave",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica chiave": {
+      "main": [
+        [
+          {
+            "node": "Leggi configurazione prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leggi configurazione prompt": {
+      "main": [
+        [
+          {
+            "node": "Seleziona e verifica prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": null,
+  "tags": []
+}

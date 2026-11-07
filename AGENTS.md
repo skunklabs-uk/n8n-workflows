@@ -1,8 +1,8 @@
 # n8n Workflows Agent Instructions
 
-## Functional and technical documentation
+## Documentazione funzionale e tecnica
 
-For functional or technical documentation, consult the shared [Diátaxis guidance](https://github.com/skunklabs-uk/codex-skills/blob/docs/shared-documentation-guidance/AGENTS.global.md#functional-and-technical-documentation).
+Per la documentazione funzionale o tecnica, consulta la [guida condivisa Diátaxis](https://github.com/skunklabs-uk/codex-skills/blob/docs/shared-documentation-guidance/AGENTS.global.md#functional-and-technical-documentation).
 
 **Status:** Active
 

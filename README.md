@@ -148,10 +148,10 @@ solo messaggi del bot `U0BP05KJACA` con il marker
 
 Ogni URL NEWS deve corrispondere a una `url_citation` restituita da
 `web_search`, altrimenti l'esecuzione fallisce prima del post. Il contratto
-comune live richiede anche la registrazione di esito e prove nella Routine. Al
-momento non è disponibile un connettore o una credenziale Routine in n8n; questa
-parte resta bloccata e il workflow non va pubblicato finché non viene
-qualificato il percorso Routine o approvata un'eccezione al contratto.
+comune live richiede anche la registrazione di esito e prove nella Routine; per
+questo briefing l'utente ha autorizzato esplicitamente l'eccezione il
+2026-11-07. Non esiste al momento un connettore o una credenziale Routine in
+n8n, quindi il workflow non registra prove nella Routine.
 
 La risposta LiteLLM viene estratta da `output[].content[]`; il link di ogni
 notizia viene confrontato con le `url_citation` e poi pubblicato nel report.

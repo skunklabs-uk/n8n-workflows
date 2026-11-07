@@ -37,6 +37,14 @@
       }
     },
     {
+      "id": "manual-trigger",
+      "name": "Avvio manuale",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 220],
+      "parameters": {}
+    },
+    {
       "id": "load-prompt",
       "name": "Carica prompt e contratto",
       "type": "n8n-nodes-base.executeWorkflow",
@@ -205,6 +213,17 @@
     }
   ],
   "connections": {
+    "Avvio manuale": {
+      "main": [
+        [
+          {
+            "node": "Seleziona briefing tech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Ogni giorno alle 08:00": {
       "main": [
         [

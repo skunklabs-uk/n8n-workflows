@@ -133,17 +133,19 @@ non viene passato all'LLM. Per ogni notizia il modello deve restituire una riga
 fonte e motivazione. Usa LiteLLM `ai-standard` con ricerca web, pubblica il
 report nel canale e termina recuperando il permalink Slack nativo. La
 pianificazione è alle 08:00 Europe/Rome. Il JSON è unpublished
-all'importazione; la prima pubblicazione è manuale.
+all'importazione; la prima pubblicazione è manuale. Il trigger `Avvio manuale`
+consente la prima prova o un'esecuzione on demand; dalla CLI n8n si usa
+`n8n execute --id=dailyTechBriefing20261107` senza pubblicare la schedule.
 
 Richiede le credenziali runtime n8n `LiteLLM - n8n Briefing` (HTTP Bearer,
 limitata ad `ai-standard`) e `Slack Homelab Alerts`. Il token LiteLLM e i valori
 delle credenziali restano solo nell'istanza n8n. La credenziale Slack deve
 avere `groups:history` oltre ai permessi di scrittura e permalink: senza questo
 scope Slack rifiuta la lettura dello storico del canale privato e il workflow
-non può rispettare la deduplica. L'export live del 2026-11-07 ha confermato
-che il credential n8n non ha `groups:history`; il workflow non va pubblicato
-finché l'app Slack non viene ri-autorizzata con tale scope. La deduplica include
-solo messaggi del bot `U0BP05KJACA` con il marker
+non può rispettare la deduplica. Il 2026-11-07 lo scope è stato concesso e la
+credenziale n8n esistente è stata verificata con HTTP 200 su
+`conversations.history`. La deduplica include solo messaggi del bot
+`U0BP05KJACA` con il marker
 `_Briefing tech quotidiano · ref:daily-tech-briefing_`.
 
 Ogni URL NEWS deve corrispondere a una `url_citation` restituita da

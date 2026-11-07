@@ -1,0 +1,302 @@
+{
+  "id": "dailyTechBriefing20261107",
+  "name": "Briefing tech quotidiano",
+  "active": false,
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Ogni giorno alle 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "job-key",
+      "name": "Seleziona briefing tech",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{chiave:'job-05'}}];"
+      }
+    },
+    {
+      "id": "load-prompt",
+      "name": "Carica prompt e contratto",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "pocPromptLoader20261107",
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "slack-history",
+      "name": "Leggi storico del canale",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        700,
+        0
+      ],
+      "parameters": {
+        "resource": "channel",
+        "operation": "history",
+        "channelId": {
+          "__rl": true,
+          "value": "C0CFLLUGLFP",
+          "mode": "id"
+        },
+        "returnAll": true,
+        "filters": {
+          "oldest": "2026-11-07T00:00:00.000Z"
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8oGPRjhwfgjEJwxH",
+          "name": "Slack Homelab Alerts"
+        }
+      },
+      "notes": "Reads the workflow-era channel archive from 2026-11-07 onward. Requires groups:history on the Slack app to read this private channel."
+    },
+    {
+      "id": "build-request",
+      "name": "Prepara ricerca con deduplica",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cfg = $('Carica prompt e contratto').first().json;\nconst task = `${cfg.contratto_comune}\\n\\n${cfg.prompt}\\n\\nTitolo incarico: ${cfg.titolo}\\n\\nPer ogni notizia produci una sola riga nel formato esatto: NEWS: titolo | FACT: fatto verificato | URL: https://... | WHY: perché conta. Massimo tre righe. Includi solo notizie con URL diretto verificabile. Se non ci sono novità, scrivi esattamente: NESSUN AGGIORNAMENTO — nessuna azione richiesta. Non aggiungere preamboli o blocchi di codice.`;\nreturn [{json:{model:'ai-standard',input:task}}];"
+      }
+    },
+    {
+      "id": "generate",
+      "name": "Cerca e genera briefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1220,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.skunklabs.uk/v1/responses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model:$json.model,input:[{role:'user',content:$json.input}],tools:[{type:'web_search'}],tool_choice:'auto'}) }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": false,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "n8nBriefingLlm01",
+          "name": "LiteLLM - n8n Briefing"
+        }
+      }
+    },
+    {
+      "id": "format-report",
+      "name": "Estrai report e fonti",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r = $json;\nconst blocks = Array.isArray(r.output) ? r.output.flatMap(o => Array.isArray(o.content) ? o.content : []) : [];\nconst text = blocks.filter(c => typeof c.text === \"string\").map(c => c.text).join(\"\\n\").trim() || (typeof r.output_text === \"string\" ? r.output_text.trim() : \"\");\nif (!text) throw new Error(\"LiteLLM did not return briefing text\");\nconst citations = [...new Set(blocks.flatMap(c => Array.isArray(c.annotations) ? c.annotations : []).filter(a => a.type === \"url_citation\" && a.url).map(a => a.url))];\nfunction canonicalUrl(value) {\n  try {\n    const url = new URL(value);\n    url.hash = \"\";\n    for (const key of [...url.searchParams.keys()]) if (/^(utm_|ref$|source$)/i.test(key)) url.searchParams.delete(key);\n    url.pathname = url.pathname.replace(/\\/$/, \"\");\n    url.hostname = url.hostname.toLowerCase();\n    const parameters = [...url.searchParams.entries()].sort(([a], [b]) => a.localeCompare(b));\n    url.search = \"\";\n    for (const [key, item] of parameters) url.searchParams.append(key, item);\n    return url.toString();\n  } catch {\n    return value;\n  }\n}\nfunction tokens(value) {\n  return value.normalize(\"NFKD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase().replace(/[^a-z0-9 ]/g, \" \").split(/\\s+/).filter(t => t.length > 2 && ![\"the\",\"and\",\"for\",\"with\",\"from\",\"that\",\"this\",\"della\",\"delle\",\"degli\",\"dell\",\"che\",\"per\",\"una\",\"uno\",\"nel\",\"nella\",\"alla\",\"alle\",\"con\",\"come\",\"dopo\",\"sul\",\"sulla\",\"tra\",\"fra\"].includes(t));\n}\nconst candidatePattern = /^\\s*(?:[-*]\\s*)?NEWS:\\s*(.+?)\\s*\\|\\s*FACT:\\s*(.+?)\\s*\\|\\s*URL:\\s*(https?:\\/\\/\\S+?)\\s*\\|\\s*WHY:\\s*(.+?)\\s*$/gm;\nconst postedPattern = /^• \\*(.+?)\\* — (.+?)\\n  <([^>|]+)\\|Fonte>\\n  _Perché conta: (.+?)_$/gm;\nfunction parseCandidateRecords(value) {\n  return [...value.matchAll(candidatePattern)].map(m => ({title:m[1].trim(),fact:m[2].trim(),url:m[3].replace(/[),.;]+$/, \"\"),why:m[4].trim()}));\n}\nfunction parsePublishedRecords(value) {\n  return [...value.matchAll(postedPattern)].map(m => ({title:m[1].trim(),fact:m[2].trim(),url:m[3].trim(),why:m[4].trim()}));\n}\nconst candidates = parseCandidateRecords(text);\nconst explicitNoUpdates = /NESSUN AGGIORNAMENTO/i.test(text);\nif (!explicitNoUpdates && candidates.length === 0) throw new Error(\"LiteLLM did not follow NEWS/FACT/URL/WHY format\");\nconst verifiedUrls = new Set(citations.map(canonicalUrl));\nif (candidates.some(item => !verifiedUrls.has(canonicalUrl(item.url)))) throw new Error(\"Briefing item URL is missing a web_search URL citation\");\nconst marker = \"_Briefing tech quotidiano · ref:daily-tech-briefing_\";\nconst priorMessages = $(\"Leggi storico del canale\").all().map(i => i.json).filter(m => m.user === \"U0BP05KJACA\" && typeof m.text === \"string\" && m.text.includes(marker));\nconst previous = priorMessages.flatMap(m => parsePublishedRecords(m.text));\nconst seenUrls = new Set(previous.map(item => canonicalUrl(item.url)));\nconst seenTitles = previous.map(item => new Set(tokens(item.title + \" \" + item.fact)));\nconst fresh = candidates.filter(item => {\n  const url = canonicalUrl(item.url);\n  const words = new Set(tokens(item.title + \" \" + item.fact));\n  const duplicate = seenUrls.has(url) || seenTitles.some(old => {\n    const union = new Set([...old, ...words]);\n    const overlap = [...words].filter(word => old.has(word)).length;\n    return union.size > 0 && overlap / union.size >= 0.6;\n  });\n  if (duplicate) return false;\n  seenUrls.add(url);\n  seenTitles.push(words);\n  return true;\n});\nlet lines;\nif (explicitNoUpdates || fresh.length === 0) {\n  lines = [\"NESSUN AGGIORNAMENTO — nessuna azione richiesta\"];\n} else {\n  lines = fresh.slice(0, 3).map(item => \"• *\" + item.title + \"* — \" + item.fact + \"\\n  <\" + item.url + \"|Fonte>\\n  _Perché conta: \" + item.why + \"_\");\n}\nconst report = [...lines, marker].join(\"\\n\\n\");\nreturn [{json:{report,priorBriefingCount:previous.length,deduplicatedCount:candidates.length-fresh.length}}];"
+      }
+    },
+    {
+      "id": "post-report",
+      "name": "Pubblica in homelab-chat",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1740,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0CFLLUGLFP",
+          "mode": "id"
+        },
+        "text": "={{ $json.report }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "unfurl_links": false,
+          "unfurl_media": false
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8oGPRjhwfgjEJwxH",
+          "name": "Slack Homelab Alerts"
+        }
+      }
+    },
+    {
+      "id": "permalink",
+      "name": "Ottieni permalink Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        2000,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getPermalink",
+        "channelId": {
+          "__rl": true,
+          "value": "C0CFLLUGLFP",
+          "mode": "id"
+        },
+        "timestamp": "={{ $json.message_timestamp }}"
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8oGPRjhwfgjEJwxH",
+          "name": "Slack Homelab Alerts"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Ogni giorno alle 08:00": {
+      "main": [
+        [
+          {
+            "node": "Seleziona briefing tech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seleziona briefing tech": {
+      "main": [
+        [
+          {
+            "node": "Carica prompt e contratto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carica prompt e contratto": {
+      "main": [
+        [
+          {
+            "node": "Leggi storico del canale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leggi storico del canale": {
+      "main": [
+        [
+          {
+            "node": "Prepara ricerca con deduplica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara ricerca con deduplica": {
+      "main": [
+        [
+          {
+            "node": "Cerca e genera briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cerca e genera briefing": {
+      "main": [
+        [
+          {
+            "node": "Estrai report e fonti",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estrai report e fonti": {
+      "main": [
+        [
+          {
+            "node": "Pubblica in homelab-chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pubblica in homelab-chat": {
+      "main": [
+        [
+          {
+            "node": "Ottieni permalink Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome"
+  },
+  "staticData": null
+}

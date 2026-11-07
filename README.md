@@ -121,6 +121,44 @@ Telegram e una pagina di approvazione su `hooks.skunklabs.uk`:
 - Un secondo workflow schedulato controlla i post già pubblicati e demota a
   `featured: 0` quelli con `expires` scaduto.
 
+## Briefing tech quotidiano
+
+`workflows/daily-tech-briefing.json` carica `job-05` e `contratto-comune`
+chiamando il workflow `briefing-prompt-loader.json`, consulta lo storico da
+`2026-11-07` di `#homelab-chat` e confronta localmente i report precedenti
+contrassegnati dal workflow per evitare duplicati. La deduplica usa URL
+canonici e sovrapposizione dei termini del titolo; il contenuto dello storico
+non viene passato all'LLM. Per ogni notizia il modello deve restituire una riga
+`NEWS / FACT / URL / WHY`, poi il workflow pubblica al massimo tre elementi con
+fonte e motivazione. Usa LiteLLM `ai-standard` con ricerca web, pubblica il
+report nel canale e termina recuperando il permalink Slack nativo. La
+pianificazione è alle 08:00 Europe/Rome. Il JSON è unpublished
+all'importazione; la prima pubblicazione è manuale.
+
+Richiede le credenziali runtime n8n `LiteLLM - n8n Briefing` (HTTP Bearer,
+limitata ad `ai-standard`) e `Slack Homelab Alerts`. Il token LiteLLM e i valori
+delle credenziali restano solo nell'istanza n8n. La credenziale Slack deve
+avere `groups:history` oltre ai permessi di scrittura e permalink: senza questo
+scope Slack rifiuta la lettura dello storico del canale privato e il workflow
+non può rispettare la deduplica. L'export live del 2026-11-07 ha confermato
+che il credential n8n non ha `groups:history`; il workflow non va pubblicato
+finché l'app Slack non viene ri-autorizzata con tale scope. La deduplica include
+solo messaggi del bot `U0BP05KJACA` con il marker
+`_Briefing tech quotidiano · ref:daily-tech-briefing_`.
+
+Ogni URL NEWS deve corrispondere a una `url_citation` restituita da
+`web_search`, altrimenti l'esecuzione fallisce prima del post. Il contratto
+comune live richiede anche la registrazione di esito e prove nella Routine. Al
+momento non è disponibile un connettore o una credenziale Routine in n8n; questa
+parte resta bloccata e il workflow non va pubblicato finché non viene
+qualificato il percorso Routine o approvata un'eccezione al contratto.
+
+La risposta LiteLLM viene estratta da `output[].content[]`; il link di ogni
+notizia viene confrontato con le `url_citation` e poi pubblicato nel report.
+La verifica runtime del 2026-11-07 ha confermato l'endpoint API pubblico
+`https://ai.skunklabs.uk/v1` e il tool `web_search` sul modello `ai-standard`;
+`web_search_preview` è stato rifiutato dal provider configurato.
+
 ## Job Search Radar
 
 `workflows/job-search-radar.json` recupera annunci pubblici da Remotive,

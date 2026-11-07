@@ -1,5 +1,9 @@
 # n8n Workflows Agent Instructions
 
+## Documentazione funzionale e tecnica
+
+Per la documentazione funzionale o tecnica, consulta la [guida condivisa Diátaxis](https://github.com/skunklabs-uk/codex-skills/blob/main/AGENTS.global.md#functional-and-technical-documentation).
+
 **Status:** Active
 
 ## Agent OS e lifecycle delle skill

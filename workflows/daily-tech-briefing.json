@@ -55,7 +55,11 @@
       ],
       "parameters": {
         "source": "database",
-        "workflowId": "pocPromptLoader20261107",
+        "workflowId": {
+          "__rl": true,
+          "value": "pocPromptLoader20261107",
+          "mode": "id"
+        },
         "mode": "once",
         "options": {
           "waitForSubWorkflow": true

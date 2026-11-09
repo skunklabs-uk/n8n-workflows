@@ -13,6 +13,14 @@ assert.equal(historyNode.parameters.limit, 100);
 assert.match(requestNode.parameters.jsCode, /task\.length > 32000/);
 assert.match(workflow.nodes.find(node => node.id === "generate").parameters.jsonBody, /max_output_tokens:1200/);
 assert.match(requestNode.parameters.jsCode, /NON VERIFICATA/);
+assert.match(requestNode.parameters.jsCode, /Non imporre calcoli aritmetici/);
+assert.match(requestNode.parameters.jsCode, /non scartare una notizia.*contraddice o non la conferma/i);
+assert.equal(workflow.nodes.find(node => node.type === "n8n-nodes-base.scheduleTrigger").parameters.rule.interval[0].triggerAtHour, 8);
+assert.equal(workflow.settings.timezone, "Europe/Rome");
+assert.equal(workflow.settings.availableInMCP, true);
+assert.equal(workflow.nodes.find(node => node.id === "load-prompt").parameters.workflowId.value, "pocPromptLoader20261107");
+assert.equal(workflow.nodes.find(node => node.id === "e7963091-4991-4128-96fc-0f0ef89acded").parameters.workflowId.value, "iY736K0RGUKznWpl");
+
 
 function run(report, url = "https://example.com/2026/story", annotationUrl = url, priorMessages = []) {
   const response = {
@@ -38,17 +46,17 @@ function run(report, url = "https://example.com/2026/story", annotationUrl = url
 
 const verified = "NEWS: Lancio prodotto | FACT: La fonte conferma il lancio | STATUS: VERIFICATA | URL: https://example.com/2026/story | WHY: Novità rilevante";
 const unverified = "NEWS: Dato consegne | FACT: La fonte riporta 621 consegne; il totale di 870 non è confermato | STATUS: NON VERIFICATA | URL: https://example.com/2026/story | WHY: Il dato annuale resta incerto";
-assert.match(run(verified).report, /Stato: VERIFICATA/);
+assert.match(run(verified).report, /_Stato: VERIFICATA_/);
 assert.match(run(verified).report, /<https:\/\/example\.com\/2026\/story\|Fonte>/);
-assert.match(run(unverified).report, /Stato: NON VERIFICATA/);
+assert.match(run(unverified).report, /_Stato: NON VERIFICATA_/);
 assert.match(run(unverified).report, /totale di 870 non è confermato/i);
 assert.match(run(unverified).report, /<https:\/\/example\.com\/2026\/story\|Fonte>/);
 
 const archive = unverified.replace("https://example.com/2026/story", "https://example.com/news/2026/11");
-assert.match(run(archive, "https://example.com/news/2026/11").report, /Stato: NON VERIFICATA/);
+assert.match(run(archive, "https://example.com/news/2026/11").report, /_Stato: NON VERIFICATA_/);
 const unsupportedNumber = "NEWS: Dato | FACT: Airbus had delivered 999 aircraft by October | STATUS: NON VERIFICATA | URL: https://example.com/2026/story | WHY: Impatto";
 assert.match(run(unsupportedNumber).report, /999 aircraft/);
-assert.match(run(unsupportedNumber).report, /Stato: NON VERIFICATA/);
+assert.match(run(unsupportedNumber).report, /_Stato: NON VERIFICATA_/);
 
 const marker = "_Briefing tech quotidiano · ref:daily-tech-briefing_";
 const legacyPosted = "• *Lancio prodotto* — La fonte conferma il lancio\n  <https://example.com/2026/story|Fonte>\n  _Perché conta: Novità rilevante_\n\n" + marker;
@@ -68,7 +76,7 @@ assert.throws(
 );
 assert.throws(
   () => run(verified.replace("https://example.com/2026/story", "http://example.com/story"), "http://example.com/story"),
-  /HTTPS link/,
+  /HTTPS URL/,
   "source links must use HTTPS",
 );
 assert.throws(

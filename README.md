@@ -151,23 +151,24 @@ credenziale n8n esistente è stata verificata con HTTP 200 su
 `_Briefing tech quotidiano · ref:daily-tech-briefing_`.
 
 Ogni notizia include `STATUS: VERIFICATA` oppure `STATUS: NON VERIFICATA` e
-il link HTTPS della fonte, che deve corrispondere a una `url_citation` di
+il link HTTPS della fonte, che deve corrispondere a una `url_citation` inline di
 `web_search`; senza citazione inline l'esecuzione fallisce prima del post. Una
-notizia non verificata resta nel report con l'incertezza o la contraddizione
-esplicitata nel fatto e con il link consultabile. Il formatter non scarica né
-confronta il contenuto della pagina: lo stato è una valutazione del modello,
-non una verifica deterministica. Il briefing non va usato come fonte decisionale
-senza controllo indipendente. Il contratto comune live richiede anche la
-registrazione di esito e prove nella Routine; per questo briefing l'utente ha
-autorizzato esplicitamente l'eccezione il 2026-11-07. Non esiste al momento un
-connettore o una credenziale Routine in n8n, quindi il workflow non registra
-prove nella Routine.
+notizia non verificata o contraddetta resta nel report, con incertezza espressa
+nel fatto, status visibile e link della fonte. Non sono richiesti calcoli
+aritmetici. Lo status è una valutazione del modello, non una verifica
+deterministica: il workflow non scarica né confronta il contenuto della pagina.
+Non usare il briefing come fonte decisionale senza controllo indipendente.
+Il contratto comune live richiede anche la registrazione di esito e prove nella
+Routine; per questo briefing l'utente ha autorizzato esplicitamente l'eccezione
+il 2026-11-07. Non esiste al momento un connettore o una credenziale Routine in
+n8n, quindi il workflow non registra prove nella Routine.
 
 La risposta LiteLLM viene estratta da `output[].content[]`; stato, link della
 fonte e motivazione di ogni notizia sono poi pubblicati nel report.
 La verifica runtime del 2026-11-07 ha confermato l'endpoint API pubblico
 `https://ai.skunklabs.uk/v1` e il tool `web_search` sul modello `ai-standard`;
 `web_search_preview` è stato rifiutato dal provider configurato.
+
 
 ## Job Search Radar
 

@@ -125,11 +125,13 @@ Telegram e una pagina di approvazione su `hooks.skunklabs.uk`:
 
 `workflows/daily-tech-briefing.json` carica `job-05` e `contratto-comune`
 chiamando il workflow `briefing-prompt-loader.json`, consulta lo storico da
-`2026-11-07` di `#homelab-chat` e confronta localmente i report precedenti
+`2026-11-07` di `#homelab-chat` (fino a 100 messaggi) e confronta localmente i report precedenti
 contrassegnati dal workflow per evitare duplicati. La deduplica usa URL
 canonici e sovrapposizione dei termini del titolo; il contenuto dello storico
-non viene passato all'LLM. Per ogni notizia il modello deve restituire una riga
-`NEWS / FACT / URL / WHY`, poi il workflow pubblica al massimo tre elementi con
+non viene passato all'LLM. L'input è limitato a 32.000 caratteri (superato il
+limite il workflow si ferma prima della chiamata) e l'output a 1.200 token.
+Per ogni notizia il modello deve restituire una riga
+`NEWS / FACT / STATUS / URL / WHY`, poi il workflow pubblica al massimo tre elementi con
 fonte e motivazione. Usa LiteLLM `ai-standard` con ricerca web, pubblica il
 report nel canale e termina recuperando il permalink Slack nativo. La
 pianificazione è alle 08:00 Europe/Rome. Il JSON è unpublished
@@ -148,15 +150,21 @@ credenziale n8n esistente è stata verificata con HTTP 200 su
 `U0BP05KJACA` con il marker
 `_Briefing tech quotidiano · ref:daily-tech-briefing_`.
 
-Ogni URL NEWS deve corrispondere a una `url_citation` restituita da
-`web_search`, altrimenti l'esecuzione fallisce prima del post. Il contratto
-comune live richiede anche la registrazione di esito e prove nella Routine; per
-questo briefing l'utente ha autorizzato esplicitamente l'eccezione il
-2026-11-07. Non esiste al momento un connettore o una credenziale Routine in
-n8n, quindi il workflow non registra prove nella Routine.
+Ogni notizia include `STATUS: VERIFICATA` oppure `STATUS: NON VERIFICATA` e
+il link HTTPS della fonte, che deve corrispondere a una `url_citation` di
+`web_search`; senza citazione inline l'esecuzione fallisce prima del post. Una
+notizia non verificata resta nel report con l'incertezza o la contraddizione
+esplicitata nel fatto e con il link consultabile. Il formatter non scarica né
+confronta il contenuto della pagina: lo stato è una valutazione del modello,
+non una verifica deterministica. Il briefing non va usato come fonte decisionale
+senza controllo indipendente. Il contratto comune live richiede anche la
+registrazione di esito e prove nella Routine; per questo briefing l'utente ha
+autorizzato esplicitamente l'eccezione il 2026-11-07. Non esiste al momento un
+connettore o una credenziale Routine in n8n, quindi il workflow non registra
+prove nella Routine.
 
-La risposta LiteLLM viene estratta da `output[].content[]`; il link di ogni
-notizia viene confrontato con le `url_citation` e poi pubblicato nel report.
+La risposta LiteLLM viene estratta da `output[].content[]`; stato, link della
+fonte e motivazione di ogni notizia sono poi pubblicati nel report.
 La verifica runtime del 2026-11-07 ha confermato l'endpoint API pubblico
 `https://ai.skunklabs.uk/v1` e il tool `web_search` sul modello `ai-standard`;
 `web_search_preview` è stato rifiutato dal provider configurato.

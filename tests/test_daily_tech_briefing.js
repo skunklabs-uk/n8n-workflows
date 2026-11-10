@@ -52,15 +52,27 @@ assert.match(run(unverified).report, /totale di 870 non è confermato/i);
 assert.match(run(unverified).report, /<https:\/\/example\.com\/2026\/story\|Fonte>/);
 const trackedCitation = "https://example.com/2026/story?utm_source=openai";
 assert.match(run(verified, "https://example.com/2026/story", trackedCitation).report, /_Stato: VERIFICATA_/);
-assert.throws(
-  () => run(verified, "https://example.com/2026/story", "https://example.com/2026/other"),
-  /not cited inline/,
-  "a different URL path is not treated as the cited source",
+assert.match(
+  run(verified, "https://example.com/2026/story", null).report,
+  /<https:\/\/example\.com\/2026\/story\|Fonte>/,
+  "a web_search result URL is sufficient when no inline annotation is returned",
 );
 assert.throws(
-  () => run(verified, "https://example.com/2026/story", "https://example.com/2026/story/"),
-  /not cited inline/,
-  "a trailing slash is part of the cited path",
+  () => run(verified, "https://example.com/2026/other", null),
+  /missing a web_search URL citation/,
+  "the story URL must match a web_search result",
+);
+assert.throws(
+  () => run(verified, "https://example.com/2026/story/", null),
+  /missing a web_search URL citation/,
+  "a trailing slash is part of the source path",
+);
+const apId = "fe9a92cc7631b58fd630ccebf9692f6c";
+const apStory = verified.replace("https://example.com/2026/story", `https://apnews.com/article/booker-prize-fiction-winner-${apId}`);
+assert.match(
+  run(apStory, `https://apnews.com/article/${apId}`, null).report,
+  new RegExp(`<https://apnews\\.com/article/${apId}\\|Fonte>`),
+  "a source result's canonical AP URL replaces a matching slugged article URL",
 );
 assert.throws(
   () => run(verified.replace("https://example.com/2026/story", "https://user@example.com/2026/story"), "https://user@example.com/2026/story", "https://user@example.com/2026/story"),
@@ -84,11 +96,6 @@ assert.throws(
   () => run(verified.replace("STATUS: VERIFICATA", "STATUS: DUBBIA")),
   /one to three complete/,
   "only the two agreed status values are accepted",
-);
-assert.throws(
-  () => run(unverified, "https://example.com/2026/story", null),
-  /not cited inline/,
-  "each attached source must appear in the answer citation",
 );
 assert.throws(
   () => run(verified.replace("https://example.com/2026/story", "http://example.com/story"), "http://example.com/story"),

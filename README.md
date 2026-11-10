@@ -151,10 +151,11 @@ credenziale n8n esistente è stata verificata con HTTP 200 su
 `_Briefing tech quotidiano · ref:daily-tech-briefing_`.
 
 Ogni notizia include `STATUS: VERIFICATA` oppure `STATUS: NON VERIFICATA` e
-il link HTTPS della fonte, che deve corrispondere a una `url_citation` inline di
-`web_search`; senza citazione inline l'esecuzione fallisce prima del post. Una
-notizia non verificata o contraddetta resta nel report, con incertezza espressa
-nel fatto, status visibile e link della fonte. Non sono richiesti calcoli
+il link HTTPS della fonte deve corrispondere a un risultato di `web_search`; le
+citazioni inline, quando presenti, sono evidenza aggiuntiva. Senza corrispondenza
+nella lista dei risultati l'esecuzione fallisce prima del post. Una notizia non
+verificata o contraddetta resta nel report, con incertezza espressa nel fatto,
+status visibile e link della fonte. Non sono richiesti calcoli
 aritmetici. Lo status è una valutazione del modello, non una verifica
 deterministica: il workflow non scarica né confronta il contenuto della pagina.
 Non usare il briefing come fonte decisionale senza controllo indipendente.

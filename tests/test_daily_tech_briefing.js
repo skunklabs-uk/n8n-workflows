@@ -39,7 +39,6 @@ function run(report, url = "https://example.com/2026/story", annotationUrl = url
       assert.equal(name, "Leggi storico del canale");
       return { all: () => priorMessages.map(text => ({ json: { user: "U0BP05KJACA", text } })) };
     },
-    URL,
   };
   return vm.runInNewContext("(function(){" + code + "\n})()", context)[0].json;
 }
@@ -51,6 +50,23 @@ assert.match(run(verified).report, /<https:\/\/example\.com\/2026\/story\|Fonte>
 assert.match(run(unverified).report, /_Stato: NON VERIFICATA_/);
 assert.match(run(unverified).report, /totale di 870 non è confermato/i);
 assert.match(run(unverified).report, /<https:\/\/example\.com\/2026\/story\|Fonte>/);
+const trackedCitation = "https://example.com/2026/story?utm_source=openai";
+assert.match(run(verified, "https://example.com/2026/story", trackedCitation).report, /_Stato: VERIFICATA_/);
+assert.throws(
+  () => run(verified, "https://example.com/2026/story", "https://example.com/2026/other"),
+  /not cited inline/,
+  "a different URL path is not treated as the cited source",
+);
+assert.throws(
+  () => run(verified, "https://example.com/2026/story", "https://example.com/2026/story/"),
+  /not cited inline/,
+  "a trailing slash is part of the cited path",
+);
+assert.throws(
+  () => run(verified.replace("https://example.com/2026/story", "https://user@example.com/2026/story"), "https://user@example.com/2026/story", "https://user@example.com/2026/story"),
+  /HTTPS link/,
+  "source links must not contain credentials",
+);
 
 const archive = unverified.replace("https://example.com/2026/story", "https://example.com/news/2026/11");
 assert.match(run(archive, "https://example.com/news/2026/11").report, /_Stato: NON VERIFICATA_/);

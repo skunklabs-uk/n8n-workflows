@@ -1,83 +1,52 @@
 {
   "id": "dailyTechBriefing20261107",
   "name": "Homelab - Briefing tech quotidiano",
-  "active": false,
   "nodes": [
     {
-      "id": "schedule",
-      "name": "Ogni giorno alle 08:00",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        0,
-        0
-      ],
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "days",
-              "triggerAtHour": 8
-            }
-          ]
-        }
-      }
-    },
-    {
+        "jsCode": "return [{json:{chiave:'job-05'}}];"
+      },
       "id": "job-key",
       "name": "Seleziona briefing tech",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        220,
+        224,
         0
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{chiave:'job-05'}}];"
-      }
+      ]
     },
     {
+      "parameters": {},
       "id": "manual-trigger",
       "name": "Avvio manuale",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        220
-      ],
-      "parameters": {}
+        -48,
+        -96
+      ]
     },
     {
-      "id": "load-prompt",
-      "name": "Carica prompt e contratto",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        440,
-        0
-      ],
       "parameters": {
-        "source": "database",
         "workflowId": {
           "__rl": true,
           "value": "pocPromptLoader20261107",
           "mode": "id"
         },
-        "mode": "once",
         "options": {
           "waitForSubWorkflow": true
         }
-      }
+      },
+      "id": "load-prompt",
+      "name": "Carica prompt e contratto",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        0
+      ]
     },
     {
-      "id": "slack-history",
-      "name": "Leggi storico del canale",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.5,
-      "position": [
-        700,
-        0
-      ],
       "parameters": {
         "resource": "channel",
         "operation": "history",
@@ -86,20 +55,33 @@
           "value": "C0CFLLUGLFP",
           "mode": "id"
         },
-        "returnAll": true,
+        "returnAll": false,
         "filters": {
           "oldest": "2026-11-07T00:00:00.000Z"
-        }
+        },
+        "limit": 100
       },
+      "id": "slack-history",
+      "name": "Leggi storico del canale",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        704,
+        0
+      ],
+      "webhookId": "00324098-a4d9-49f1-96b3-8d1a92c96e34",
+      "notes": "Reads the workflow-era channel archive from 2026-11-07 onward. Requires groups:history on the Slack app to read this private channel.",
       "credentials": {
         "slackApi": {
           "id": "8oGPRjhwfgjEJwxH",
           "name": "Slack Homelab Alerts"
         }
-      },
-      "notes": "Reads the workflow-era channel archive from 2026-11-07 onward. Requires groups:history on the Slack app to read this private channel."
+      }
     },
     {
+      "parameters": {
+      "jsCode": "const cfg = $('Carica prompt e contratto').first().json;\nconst task = `${cfg.contratto_comune}\\n\\n${cfg.prompt}\\n\\nTitolo incarico: ${cfg.titolo}\\n\\nCerca una fonte consultata con link HTTPS, preferendo la fonte primaria. Valuta se la fonte conferma tutti i fatti essenziali: usa STATUS: VERIFICATA solo quando li conferma; usa STATUS: NON VERIFICATA se il dato manca, è in conflitto con la fonte o non puoi confermarlo. Non scartare una notizia solo perché una fonte la contraddice o non la conferma: includila con formulazione prudente, spiegando in FACT che cosa resta incerto o contraddetto. Non imporre calcoli aritmetici. Ogni notizia deve avere il link HTTPS della fonte consultata. Copia nel campo URL l'indirizzo HTTPS completo del risultato web_search usato; se per quella fonte è disponibile una citazione inline, usa esattamente il relativo URL. Non abbreviare o riscrivere l'URL.\\n\\nPer ogni notizia produci una sola riga nel formato esatto: NEWS: titolo | FACT: fatto e incertezze | STATUS: VERIFICATA oppure NON VERIFICATA | URL: https://... | WHY: perché conta. Massimo tre righe. Se non ci sono novità, scrivi esattamente: NESSUN AGGIORNAMENTO — nessuna azione richiesta. Non aggiungere preamboli o blocchi di codice.`;\nif (task.length > 32000) throw new Error('Briefing prompt exceeds the 32000-character input cap');\nreturn [{json:{model:'ai-standard',input:task}}];"
+      },
       "id": "build-request",
       "name": "Prepara ricerca con deduplica",
       "type": "n8n-nodes-base.code",
@@ -107,21 +89,9 @@
       "position": [
         960,
         0
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "const cfg = $('Carica prompt e contratto').first().json;\nconst task = `${cfg.contratto_comune}\\n\\n${cfg.prompt}\\n\\nTitolo incarico: ${cfg.titolo}\\n\\nPer ogni notizia produci una sola riga nel formato esatto: NEWS: titolo | FACT: fatto verificato | URL: https://... | WHY: perché conta. Massimo tre righe. Includi solo notizie con URL diretto verificabile. Se non ci sono novità, scrivi esattamente: NESSUN AGGIORNAMENTO — nessuna azione richiesta. Non aggiungere preamboli o blocchi di codice.`;\nreturn [{json:{model:'ai-standard',input:task}}];"
-      }
+      ]
     },
     {
-      "id": "generate",
-      "name": "Cerca e genera briefing",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1220,
-        0
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://ai.skunklabs.uk/v1/responses",
@@ -129,17 +99,24 @@
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({model:$json.model,input:[{role:'user',content:$json.input}],tools:[{type:'web_search'}],tool_choice:'auto',include:['web_search_call.action.sources']}) }}",
+        "jsonBody": "={{ JSON.stringify({model:$json.model,input:[{role:'user',content:$json.input}],tools:[{type:'web_search'}],tool_choice:'auto',max_output_tokens:1200,include:['web_search_call.action.sources']}) }}",
         "options": {
-          "timeout": 120000,
           "response": {
             "response": {
-              "neverError": false,
               "responseFormat": "json"
             }
-          }
+          },
+          "timeout": 120000
         }
       },
+      "id": "generate",
+      "name": "Cerca e genera briefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1232,
+        0
+      ],
       "credentials": {
         "httpBearerAuth": {
           "id": "n8nBriefingLlm01",
@@ -148,90 +125,85 @@
       }
     },
     {
+      "parameters": {
+        "jsCode": "const r = $json;\nconst blocks = Array.isArray(r.output) ? r.output.flatMap(o => Array.isArray(o.content) ? o.content : []) : [];\nconst text = blocks.filter(c => typeof c.text === \"string\").map(c => c.text).join(\"\\n\").trim() || (typeof r.output_text === \"string\" ? r.output_text.trim() : \"\");\nif (!text) throw new Error(\"LiteLLM did not return briefing text\");\nconst inlineCitations = blocks.flatMap(c => Array.isArray(c.annotations) ? c.annotations : []).filter(a => a.type === \"url_citation\" && a.url).map(a => a.url);\nconst searchedSources = Array.isArray(r.output) ? r.output.filter(o => o.type === \"web_search_call\").flatMap(o => Array.isArray(o.action?.sources) ? o.action.sources : []).map(s => s.url).filter(url => typeof url === \"string\" && url) : [];\nconst citations = [...new Set([...inlineCitations, ...searchedSources])];\nfunction canonicalUrl(value) {\n  const match = /^https:\\/\\/([^/?#\\s]+)([^?#]*)(?:\\?([^#]*))?(?:#.*)?$/i.exec(value);\n  if (!match) return value;\n  const parameters = (match[3] || \"\").split(\"&\").filter(Boolean).filter(parameter => !/^(utm_[^=]*|ref|source)$/i.test(parameter.split(\"=\", 1)[0])).sort((a, b) => a.split(\"=\", 1)[0].localeCompare(b.split(\"=\", 1)[0]));\n  return \"https://\" + match[1].toLowerCase() + (match[2] || \"\") + (parameters.length ? \"?\" + parameters.join(\"&\") : \"\");\n}\nfunction findCitationUrl(value) {\n  const normalized = canonicalUrl(value);\n  const exact = citations.find(url => canonicalUrl(url) === normalized);\n  if (exact) return exact;\n  const candidate = /^https:\\/\\/([^/?#\\s]+)([^?#]*)/i.exec(value);\n  if (!candidate) return null;\n  const candidatePath = (candidate[2] || \"/\").replace(/\\/+$/, \"\");\n  const candidateSlash = candidatePath.lastIndexOf(\"/\");\n  const candidateParent = candidatePath.slice(0, candidateSlash) || \"/\";\n  const candidateId = /(?:-|_)([a-f0-9]{32})$/i.exec(candidatePath.slice(candidateSlash + 1));\n  if (!candidateId) return null;\n  return searchedSources.find(source => {\n    const result = /^https:\\/\\/([^/?#\\s]+)([^?#]*)/i.exec(source);\n    if (!result) return false;\n    const resultPath = (result[2] || \"/\").replace(/\\/+$/, \"\");\n    const resultSlash = resultPath.lastIndexOf(\"/\");\n    const resultParent = resultPath.slice(0, resultSlash) || \"/\";\n    const resultId = /^([a-f0-9]{32})$/i.exec(resultPath.slice(resultSlash + 1));\n    return result[1].toLowerCase() === candidate[1].toLowerCase() && resultParent === candidateParent && resultId && resultId[1].toLowerCase() === candidateId[1].toLowerCase();\n  }) || null;\n}\nfunction tokens(value) {\n  return value.normalize(\"NFKD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase().replace(/[^a-z0-9 ]/g, \" \").split(/\\s+/).filter(t => t.length > 2 && ![\"the\",\"and\",\"for\",\"with\",\"from\",\"that\",\"this\",\"della\",\"delle\",\"degli\",\"dell\",\"che\",\"per\",\"una\",\"uno\",\"nel\",\"nella\",\"alla\",\"alle\",\"con\",\"come\",\"dopo\",\"sul\",\"sulla\",\"tra\",\"fra\"].includes(t));\n}\nconst candidatePattern = /^\\s*(?:[-*]\\s*)?NEWS:\\s*(.+?)\\s*\\|\\s*FACT:\\s*(.+?)\\s*\\|\\s*STATUS:\\s*(VERIFICATA|NON VERIFICATA)\\s*\\|\\s*URL:\\s*(https:\\/\\/\\S+?)\\s*\\|\\s*WHY:\\s*(.+?)\\s*$/gim;\nconst postedPattern = /^• \\*(.+?)\\* — (.+?)\\n  (?:_Stato: (VERIFICATA|NON VERIFICATA)_\\n  )?<([^>|]+)\\|Fonte>\\n  _Perché conta: (.+?)_$/gm;\nfunction parseCandidateRecords(value) {\n  return [...value.matchAll(candidatePattern)].map(m => ({title:m[1].trim(),fact:m[2].trim(),status:m[3].toUpperCase(),url:m[4].replace(/[),.;]+$/, \"\"),why:m[5].trim()}));\n}\nfunction parsePublishedRecords(value) {\n  return [...value.matchAll(postedPattern)].map(m => ({title:m[1].trim(),fact:m[2].trim(),status:m[3] || null,url:m[4].trim(),why:m[5].trim()}));\n}\nconst linesInText = text.split(/\\r?\\n/).map(line => line.trim()).filter(Boolean);\nconst explicitNoUpdates = /^NESSUN AGGIORNAMENTO — nessuna azione richiesta$/i.test(text);\nconst candidates = parseCandidateRecords(text);\nif (explicitNoUpdates) {\n  if (linesInText.length !== 1) throw new Error(\"No-update response contains extra claims\");\n} else if (linesInText.some(line => /^NESSUN AGGIORNAMENTO\\b/i.test(line))) {\n  throw new Error(\"No-update response contains extra claims\");\n} else if (candidates.length === 0 || candidates.length > 3 || candidates.length !== linesInText.length) {\n  throw new Error(\"Expected one to three complete NEWS/FACT/STATUS/HTTPS URL/WHY lines and no other text\");\n}\nfunction isHttpsLink(value) {\n  const match = /^https:\\/\\/([^/?#\\s]+)(?:[/?#][^\\s]*)?$/i.exec(value);\n  return Boolean(match && !match[1].includes(\"@\"));\n}\nfor (const item of candidates) {\n  if (!isHttpsLink(item.url)) throw new Error(\"Briefing source must be an HTTPS link\");\n  const citationUrl = findCitationUrl(item.url);\n  if (!citationUrl) throw new Error(\"Briefing item URL is missing a web_search URL citation\");\n  item.url = citationUrl;\n}\nconst marker = \"_Briefing tech quotidiano · ref:daily-tech-briefing_\";\nconst priorMessages = $(\"Leggi storico del canale\").all().map(i => i.json).filter(m => m.user === \"U0BP05KJACA\" && typeof m.text === \"string\" && m.text.includes(marker));\nconst previous = priorMessages.flatMap(m => parsePublishedRecords(m.text));\nconst seenUrls = new Set(previous.map(item => canonicalUrl(item.url)));\nconst seenTitles = previous.map(item => new Set(tokens(item.title + \" \" + item.fact)));\nconst fresh = candidates.filter(item => {\n  const url = canonicalUrl(item.url);\n  const words = new Set(tokens(item.title + \" \" + item.fact));\n  const duplicate = seenUrls.has(url) || seenTitles.some(old => {\n    const union = new Set([...old, ...words]);\n    const overlap = [...words].filter(word => old.has(word)).length;\n    return union.size > 0 && overlap / union.size >= 0.6;\n  });\n  if (duplicate) return false;\n  seenUrls.add(url);\n  seenTitles.push(words);\n  return true;\n});\nlet lines;\nif (explicitNoUpdates || fresh.length === 0) {\n  lines = [\"NESSUN AGGIORNAMENTO — nessuna azione richiesta\"];\n} else {\n  lines = fresh.map(item => \"• *\" + item.title + \"* — \" + item.fact + \"\\n  _Stato: \" + item.status + \"_\\n  <\" + item.url + \"|Fonte>\\n  _Perché conta: \" + item.why + \"_\");\n}\nconst report = [...lines, marker].join(\"\\n\\n\");\nreturn [{json:{report,priorBriefingCount:previous.length,deduplicatedCount:candidates.length-fresh.length}}];"
+      },
       "id": "format-report",
       "name": "Estrai report e fonti",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1480,
+        1488,
         0
-      ],
-      "parameters": {
-        "jsCode": "const r = $json;\nconst blocks = Array.isArray(r.output) ? r.output.flatMap(o => Array.isArray(o.content) ? o.content : []) : [];\nconst text = blocks.filter(c => typeof c.text === \"string\").map(c => c.text).join(\"\\n\").trim() || (typeof r.output_text === \"string\" ? r.output_text.trim() : \"\");\nif (!text) throw new Error(\"LiteLLM did not return briefing text\");\nconst inlineCitations = blocks.flatMap(c => Array.isArray(c.annotations) ? c.annotations : []).filter(a => a.type === \"url_citation\" && a.url).map(a => a.url);\nconst searchedSources = Array.isArray(r.output) ? r.output.filter(o => o.type === \"web_search_call\").flatMap(o => Array.isArray(o.action?.sources) ? o.action.sources : []).map(s => s.url).filter(url => typeof url === \"string\" && url) : [];\nconst citations = [...new Set([...inlineCitations, ...searchedSources])];\nfunction canonicalUrl(value) {\n  try {\n    const url = new URL(value);\n    url.hash = \"\";\n    for (const key of [...url.searchParams.keys()]) if (/^(utm_|ref$|source$)/i.test(key)) url.searchParams.delete(key);\n    url.pathname = url.pathname.replace(/\\/$/, \"\");\n    url.hostname = url.hostname.toLowerCase();\n    const parameters = [...url.searchParams.entries()].sort(([a], [b]) => a.localeCompare(b));\n    url.search = \"\";\n    for (const [key, item] of parameters) url.searchParams.append(key, item);\n    return url.toString();\n  } catch {\n    return value;\n  }\n}\nfunction tokens(value) {\n  return value.normalize(\"NFKD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase().replace(/[^a-z0-9 ]/g, \" \").split(/\\s+/).filter(t => t.length > 2 && ![\"the\",\"and\",\"for\",\"with\",\"from\",\"that\",\"this\",\"della\",\"delle\",\"degli\",\"dell\",\"che\",\"per\",\"una\",\"uno\",\"nel\",\"nella\",\"alla\",\"alle\",\"con\",\"come\",\"dopo\",\"sul\",\"sulla\",\"tra\",\"fra\"].includes(t));\n}\nconst candidatePattern = /^\\s*(?:[-*]\\s*)?NEWS:\\s*(.+?)\\s*\\|\\s*FACT:\\s*(.+?)\\s*\\|\\s*URL:\\s*(https?:\\/\\/\\S+?)\\s*\\|\\s*WHY:\\s*(.+?)\\s*$/gm;\nconst postedPattern = /^• \\*(.+?)\\* — (.+?)\\n  <([^>|]+)\\|Fonte>\\n  _Perché conta: (.+?)_$/gm;\nfunction parseCandidateRecords(value) {\n  return [...value.matchAll(candidatePattern)].map(m => ({title:m[1].trim(),fact:m[2].trim(),url:m[3].replace(/[),.;]+$/, \"\"),why:m[4].trim()}));\n}\nfunction parsePublishedRecords(value) {\n  return [...value.matchAll(postedPattern)].map(m => ({title:m[1].trim(),fact:m[2].trim(),url:m[3].trim(),why:m[4].trim()}));\n}\nconst candidates = parseCandidateRecords(text);\nconst explicitNoUpdates = /NESSUN AGGIORNAMENTO/i.test(text);\nif (!explicitNoUpdates && candidates.length === 0) throw new Error(\"LiteLLM did not follow NEWS/FACT/URL/WHY format\");\nconst verifiedUrls = new Set(citations.map(canonicalUrl));\nif (candidates.some(item => !verifiedUrls.has(canonicalUrl(item.url)))) throw new Error(\"Briefing item URL is missing a web_search URL citation\");\nconst marker = \"_Briefing tech quotidiano · ref:daily-tech-briefing_\";\nconst priorMessages = $(\"Leggi storico del canale\").all().map(i => i.json).filter(m => m.user === \"U0BP05KJACA\" && typeof m.text === \"string\" && m.text.includes(marker));\nconst previous = priorMessages.flatMap(m => parsePublishedRecords(m.text));\nconst seenUrls = new Set(previous.map(item => canonicalUrl(item.url)));\nconst seenTitles = previous.map(item => new Set(tokens(item.title + \" \" + item.fact)));\nconst fresh = candidates.filter(item => {\n  const url = canonicalUrl(item.url);\n  const words = new Set(tokens(item.title + \" \" + item.fact));\n  const duplicate = seenUrls.has(url) || seenTitles.some(old => {\n    const union = new Set([...old, ...words]);\n    const overlap = [...words].filter(word => old.has(word)).length;\n    return union.size > 0 && overlap / union.size >= 0.6;\n  });\n  if (duplicate) return false;\n  seenUrls.add(url);\n  seenTitles.push(words);\n  return true;\n});\nlet lines;\nif (explicitNoUpdates || fresh.length === 0) {\n  lines = [\"NESSUN AGGIORNAMENTO — nessuna azione richiesta\"];\n} else {\n  lines = fresh.slice(0, 3).map(item => \"• *\" + item.title + \"* — \" + item.fact + \"\\n  <\" + item.url + \"|Fonte>\\n  _Perché conta: \" + item.why + \"_\");\n}\nconst report = [...lines, marker].join(\"\\n\\n\");\nreturn [{json:{report,priorBriefingCount:previous.length,deduplicatedCount:candidates.length-fresh.length}}];"
-      }
+      ]
     },
     {
-      "id": "post-report",
-      "name": "Pubblica in homelab-chat",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.5,
-      "position": [
-        1740,
-        0
-      ],
       "parameters": {
-        "resource": "message",
-        "operation": "post",
-        "select": "channel",
-        "channelId": {
-          "__rl": true,
-          "value": "C0CFLLUGLFP",
-          "mode": "id"
-        },
-        "text": "={{ $json.report }}",
-        "otherOptions": {
-          "includeLinkToWorkflow": false,
-          "unfurl_links": false,
-          "unfurl_media": false
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
         }
       },
-      "credentials": {
-        "slackApi": {
-          "id": "8oGPRjhwfgjEJwxH",
-          "name": "Slack Homelab Alerts"
-        }
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -48,
+        96
+      ],
+      "id": "c18822ae-c419-41a7-be4e-69bc314a4495",
+      "name": "Schedule Trigger"
+    },
+    {
+      "id": "f6cbc8da-f9d5-49bd-8312-bfd6ea05db1f",
+      "name": "Prepara notifica condivisa",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "notification-text",
+              "name": "testo",
+              "type": "string",
+              "value": "={{ $json.report }}"
+            }
+          ]
+        },
+        "options": {}
       }
     },
     {
-      "id": "permalink",
-      "name": "Ottieni permalink Slack",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.5,
+      "id": "e7963091-4991-4128-96fc-0f0ef89acded",
+      "name": "Invia notifica condivisa",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
       "position": [
         2000,
         0
       ],
       "parameters": {
-        "resource": "message",
-        "operation": "getPermalink",
-        "channelId": {
+        "source": "database",
+        "workflowId": {
           "__rl": true,
-          "value": "C0CFLLUGLFP",
-          "mode": "id"
+          "mode": "id",
+          "value": "iY736K0RGUKznWpl"
         },
-        "timestamp": "={{ $json.message_timestamp }}"
-      },
-      "credentials": {
-        "slackApi": {
-          "id": "8oGPRjhwfgjEJwxH",
-          "name": "Slack Homelab Alerts"
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
         }
       }
     }
   ],
   "connections": {
     "Avvio manuale": {
-      "main": [
-        [
-          {
-            "node": "Seleziona briefing tech",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ogni giorno alle 08:00": {
       "main": [
         [
           {
@@ -297,22 +269,33 @@
         ]
       ]
     },
-    "Estrai report e fonti": {
+    "Schedule Trigger": {
       "main": [
         [
           {
-            "node": "Pubblica in homelab-chat",
+            "node": "Seleziona briefing tech",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Pubblica in homelab-chat": {
+    "Estrai report e fonti": {
       "main": [
         [
           {
-            "node": "Ottieni permalink Slack",
+            "node": "Prepara notifica condivisa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara notifica condivisa": {
+      "main": [
+        [
+          {
+            "node": "Invia notifica condivisa",
             "type": "main",
             "index": 0
           }
@@ -322,7 +305,32 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "timezone": "Europe/Rome"
+    "timezone": "Europe/Rome",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "errorWorkflow": "7svku4zugr57wSF8"
   },
-  "staticData": null
+  "nodeGroups": [
+    {
+      "id": "851eae98-05d7-4a17-8ce6-9671407764f5",
+      "name": "Prompt e fonti",
+      "nodeNames": [
+        "Seleziona briefing tech",
+        "Carica prompt e contratto",
+        "Leggi storico del canale",
+        "Prepara ricerca con deduplica"
+      ],
+      "description": "Carica il prompt e prepara le fonti per il briefing."
+    },
+    {
+      "id": "77fde75a-cee2-4c84-9dbb-d9713a17c270",
+      "name": "Notifica condivisa",
+      "nodeNames": [
+        "Prepara notifica condivisa",
+        "Invia notifica condivisa"
+      ],
+      "description": "Prepara e invia il briefing a Slack."
+    }
+  ],
+  "active": false
 }

@@ -159,6 +159,18 @@ status visibile e link della fonte. Non sono richiesti calcoli
 aritmetici. Lo status è una valutazione del modello, non una verifica
 deterministica: il workflow non scarica né confronta il contenuto della pagina.
 Non usare il briefing come fonte decisionale senza controllo indipendente.
+La risoluzione degli URL slugged è `KEEP` per il failure mode osservato nel run
+`50756`: nessuna `url_citation` inline e un URL AP non identico al risultato
+`web_search`, pur condividendo host, parent `/article/` e ID esadecimale di 32
+caratteri. Il vincolo solo-inline bloccava anche fonti presenti nei risultati;
+accettare qualunque HTTPS o ricostruire l'URL dal titolo avrebbe ammesso link
+non supportati. Il formatter usa l'URL esatto del risultato e risolve l'alias
+solo con host, parent e ID identici; altri mismatch falliscono. Il resolver è
+puro, senza dipendenze, stato o chiamate aggiuntive. Evidenze, alternative,
+test locale, replay del `50756` e run live finale sono registrati in
+[issue #38](https://github.com/skunklabs-uk/n8n-workflows/issues/38). Mantenerlo
+finché il provider può restituire questi alias; rimuoverlo solo dopo risultati
+canonici e una regressione che confermi che nessuna fonte valida viene rifiutata.
 Il contratto comune live richiede anche la registrazione di esito e prove nella
 Routine; per questo briefing l'utente ha autorizzato esplicitamente l'eccezione
 il 2026-11-07. Non esiste al momento un connettore o una credenziale Routine in
